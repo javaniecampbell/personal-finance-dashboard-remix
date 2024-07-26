@@ -5,7 +5,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
-import "./tailwind.css";
+import "./styles/tailwind.css";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
