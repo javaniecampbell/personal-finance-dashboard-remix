@@ -67,10 +67,10 @@ const BucketForm = ({ onSubmit, initialValues = {}, onCancel }) => {
   );
 };
 
-const BucketManagement = () => {
-  const [buckets, setBuckets] = useState([]);
+const BucketManagement = ({ initialBuckets, initialBucket }) => {
+  const [buckets, setBuckets] = useState(initialBuckets);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingBucket, setEditingBucket] = useState(null);
+  const [editingBucket, setEditingBucket] = useState(initialBucket);
 
   const addBucket = useCallback((newBucket) => {
     setBuckets((prevBuckets) => [
