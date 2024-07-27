@@ -1,3 +1,4 @@
+import { Budget, BudgetPerformance } from "~/types";
 import { db } from "./db.server";
 
 export async function getBudgets(userId: string) {
@@ -59,16 +60,17 @@ export async function getBudgetPerformance(userId: string) {
     category: budget.category,
     budgetedAmount: budget.amount,
     actualAmount: budget?.transactions?.reduce((sum, transaction) => sum + transaction.amount, 0),
-  }));
+    performance: budget?.transactions?.reduce((sum, transaction) => sum + transaction.amount, 0) / budget.amount,
+  })) satisfies BudgetPerformance[];
 }
 
 
-export async function getBudgetOverview(userId: string) {
+export async function getBudgetOverview(userId: string): Promise<{ budgets: Budget[], performance: BudgetPerformance[] }> {
   const budgets = await getBudgets(userId);
   const performance = await getBudgetPerformance(userId);
 
   return {
     budgets,
-    performance,
+    performance ,
   };
 }
