@@ -8,7 +8,7 @@ import {
 } from "@remix-run/react";
 import "./styles/tailwind.css";
 import { MetaFunction } from "@remix-run/node";
-
+import { ReplayProvider } from "~/components/ReplaySystem";
 export const meta: MetaFunction = () => [
   { charset: "utf-8" },
   {
@@ -42,5 +42,9 @@ export function Layout({ children }: { children: Readonly<React.ReactNode> }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <ReplayProvider>
+      <Outlet />
+    </ReplayProvider>
+  );
 }
