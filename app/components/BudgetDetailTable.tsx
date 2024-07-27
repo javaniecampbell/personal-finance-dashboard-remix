@@ -41,8 +41,10 @@ const BudgetDetailTable: React.FC<BudgetDetailTableProps> = ({
                     : "N/A"}
                 </td>
                 <td className="text-right">
-                  {budgetPerformance
-                    ? formatPercentage(budgetPerformance.performance)
+                  {budgetPerformance &&
+                  budgetPerformance.performance !== null &&
+                  budgetPerformance.performance !== undefined
+                    ? formatPercentage(budgetPerformance.performance ?? 0)
                     : "N/A"}
                 </td>
               </tr>
