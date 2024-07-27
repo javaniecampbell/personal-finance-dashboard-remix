@@ -1,7 +1,7 @@
 import React from "react";
 import { useActionData, useNavigation, Form } from "@remix-run/react";
 import { json, redirect } from "@remix-run/node";
-import { createUser, createUserSession } from "~/utils/auth.server";
+import { createUser, createUserSession } from "~/utils/auth.server.v2";
 import { useNotification } from "~/components/ErrorNotification";
 import { useFormState } from "~/hooks/useFormState";
 import MultiStepForm from "~/components/MultiStepForm";
