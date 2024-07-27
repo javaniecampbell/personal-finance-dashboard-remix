@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useLoaderData, useNavigation, useFetcher } from "@remix-run/react";
-import { json } from "@remix-run/node";
+import { ActionFunctionArgs, json } from "@remix-run/node";
 import { requireUserId } from "~/utils/auth.server.v2";
 import {
+  createTransaction,
   getTransactions,
   importTransactions,
 } from "~/utils/transactions.server";
@@ -41,21 +42,42 @@ export const loader = async ({ request }) => {
   });
 };
 
-export const action = async ({ request }) => {
+export const action = async ({ request }: ActionFunctionArgs) => {
   const userId = await requireUserId(request);
   const formData = await request.formData();
   const file = formData.get("file");
+  const { _action, ...values } = Object.fromEntries(formData);
 
-  if (!file) {
-    return json({ error: "No file uploaded" }, { status: 400 });
+  if (_action === "createTransaction") {
+    try {
+      const formData = {
+        description: values.description as string,
+        amount: parseFloat(values.amount as string),
+        date: new Date(values?.date as string),
+        category: values.category as string,
+        type: values.type as "income" | "expense",
+      };
+      const newTransaction = await createTransaction(userId, formData);
+      return json({ success: true, transaction: newTransaction });
+    } catch (error) {
+      return json({ error: error.message }, { status: 400 });
+    }
   }
 
-  try {
-    const importedCount = await importTransactions(userId, file);
-    return json({ success: true, importedCount });
-  } catch (error) {
-    return json({ error: error.message }, { status: 400 });
+  if (_action === "importTransactions") {
+    if (!file) {
+      return json({ error: "No file uploaded" }, { status: 400 });
+    }
+
+    try {
+      const importedCount = await importTransactions(userId, file);
+      return json({ success: true, importedCount });
+    } catch (error) {
+      return json({ error: error.message }, { status: 400 });
+    }
   }
+
+  return json({ error: "Invalid action" }, { status: 400 });
 };
 
 export default function TransactionsPage() {
@@ -95,10 +117,11 @@ export default function TransactionsPage() {
     formData.append("file", file);
 
     try {
-      const result = await fetcher.submit(formData, {
+      await fetcher.submit(formData, {
         method: "post",
         encType: "multipart/form-data",
       });
+      const result = fetcher.data;
       if (result.success) {
         addNotification(
           `Successfully imported ${result.importedCount} transactions`,
@@ -128,17 +151,22 @@ export default function TransactionsPage() {
       );
       if (result.success) {
         addNotification("Transaction added successfully", "success");
-        setIsAddFormOpen(false);
+        setIsAddingTransaction(false);
+        // setIsAddFormOpen(false);
       } else {
+        setIsAddingTransaction(true);
         addNotification(result.error, "error");
       }
     } catch (error) {
       addNotification("Failed to add transaction", "error");
+      setIsAddingTransaction(false);
     }
   };
 
   const handleCloseDrawer = () => {
     setIsDrawerOpen(false);
+    setIsAddingTransaction(false);
+    setSelectedTransaction(null);
   };
 
   return (
@@ -167,9 +195,9 @@ export default function TransactionsPage() {
           </FileUpload>
           <button
             onClick={openAddTransaction}
-           className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded inline-flex items-center"
+            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded inline-flex items-center"
           >
-             <Plus className="mr-2" />
+            <Plus className="mr-2" />
             Add Transaction
           </button>
         </div>
@@ -274,10 +302,14 @@ export default function TransactionsPage() {
 
       <SideDrawer
         isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        title={isAddingTransaction ? "Add Transaction" : "Transaction Details"}
+        onClose={handleCloseDrawer}
+        title={
+          isAddingTransaction === true
+            ? "Add Transaction"
+            : "Transaction Details"
+        }
       >
-        {selectedTransaction && (
+        {selectedTransaction && isAddingTransaction === false ? (
           <div>
             <p>
               <strong>Date:</strong> {formatDate(selectedTransaction.date)}
@@ -294,10 +326,13 @@ export default function TransactionsPage() {
             </p>
             {/* Add more details as needed */}
           </div>
-        )}
-
-        {isAddingTransaction && (
-          <AddTransactionForm onSubmit={handleAddTransaction} onClose={handleCloseDrawer} />
+        ) : (
+          isAddingTransaction === true && (
+            <AddTransactionForm
+              onSubmit={handleAddTransaction}
+              onClose={handleCloseDrawer}
+            />
+          )
         )}
       </SideDrawer>
     </div>
