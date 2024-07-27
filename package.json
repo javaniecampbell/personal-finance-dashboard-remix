@@ -11,6 +11,15 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.48.0",
+    "@opentelemetry/exporter-jaeger": "^1.25.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.52.1",
+    "@opentelemetry/instrumentation": "^0.52.1",
+    "@opentelemetry/resources": "^1.25.1",
+    "@opentelemetry/sdk-node": "^0.52.1",
+    "@opentelemetry/semantic-conventions": "^1.25.1",
+    "@opentelemetry/tracing": "^0.24.0",
     "@prisma/client": "^5.17.0",
     "@remix-run/node": "^2.10.3",
     "@remix-run/react": "^2.10.3",
