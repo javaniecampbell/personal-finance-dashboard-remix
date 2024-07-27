@@ -1,5 +1,6 @@
 import type { Bill } from "~/types";
 import { db } from "./db.server";
+import { BillFrequency } from "@prisma/client";
 
 export async function getUpcomingBills(userId: string) {
   const today = new Date();
@@ -76,12 +77,14 @@ export async function payBill(userId: string, billId: string, paymentDate: Date)
   });
 }
 
-export async function scheduleBillPayment(userId: string, billId: string, paymentDate: Date): Promise<Bill> {
-  return db.bill.update({
+export async function scheduleBillPayment(userId: string, billId: string, amount: number, paymentDate: Date): Promise<Bill> {
+  return await db.bill.update({
     where: { id: billId, userId },
     data: {
+      amount: amount,
       status: 'paid',
       dueDate: paymentDate,
+      // frequency: BillFrequency.monthly
     },
   });
 }
