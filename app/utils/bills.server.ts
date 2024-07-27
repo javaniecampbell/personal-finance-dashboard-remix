@@ -1,4 +1,4 @@
-import { Bill } from "~/types";
+import type { Bill } from "~/types";
 import { db } from "./db.server";
 
 export async function getUpcomingBills(userId: string) {
