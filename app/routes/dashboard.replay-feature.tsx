@@ -3,8 +3,8 @@ import { useReplay } from "~/hooks/useReplay";
 import { Play, Pause, RefreshCw } from "lucide-react";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
-import { getRecentEvents } from "~/models/events.server";
-import * as replayHandlers from '~/utils/replayHandlers';
+import { getRecentEvents } from "~/utils/events.server";
+import * as replayHandlers from "~/utils/replayHandlers";
 export const loader = async () => {
   const recentEvents = await getRecentEvents();
   return json({ recentEvents });
@@ -39,8 +39,8 @@ const Dashboard = () => {
     recordEvent,
     startReplay,
     stopReplay,
-    isReplaying,
-    currentReplayEvent,
+    // isReplaying,
+    // currentReplayEvent,
   } = useReplay();
   const [balance, setBalance] = useState(10000); // Example initial balance
   const [budgets, setBudgets] = useState({});
@@ -48,21 +48,28 @@ const Dashboard = () => {
 
   const handleReplayEvent = useCallback((event) => {
     switch (event.type) {
-      case 'DEPOSIT':
+      case "DEPOSIT":
         replayHandlers.handleDepositReplay(event, setBalance);
         break;
-      case 'WITHDRAWAL':
+      case "WITHDRAWAL":
         replayHandlers.handleWithdrawalReplay(event, setBalance);
         break;
-      case 'BUDGET_ADJUSTMENT':
-        replayHandlers.handleBudgetAdjustmentReplay(event, (categoryId, newAmount) => {
-          setBudgets(prev => ({ ...prev, [categoryId]: newAmount }));
-        });
+      case "BUDGET_ADJUSTMENT":
+        replayHandlers.handleBudgetAdjustmentReplay(
+          event,
+          (categoryId, newAmount) => {
+            setBudgets((prev) => ({ ...prev, [categoryId]: newAmount }));
+          }
+        );
         break;
-      case 'BILL_PAYMENT':
-        replayHandlers.handleBillPaymentReplay(event, setBalance, (billId, status) => {
-          setBillStatuses(prev => ({ ...prev, [billId]: status }));
-        });
+      case "BILL_PAYMENT":
+        replayHandlers.handleBillPaymentReplay(
+          event,
+          setBalance,
+          (billId, status) => {
+            setBillStatuses((prev) => ({ ...prev, [billId]: status }));
+          }
+        );
         break;
     }
   }, []);
