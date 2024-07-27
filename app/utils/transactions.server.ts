@@ -76,3 +76,21 @@ export async function importTransactions(userId: string, transactions: Array<{
     })),
   });
 }
+
+
+export async function getRecentTransactions(userId: string, limit: number) {
+  return db.transaction.findMany({
+    where: { userId },
+    orderBy: { date: 'desc' },
+    take: limit,
+  });
+}
+
+export async function getAccountBalance(userId: string) {
+  const accounts = await db.account.findMany({
+    where: { userId },
+    select: { balance: true },
+  });
+
+  return accounts.reduce((sum, account) => sum + account.balance, 0);
+}
