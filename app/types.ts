@@ -9,6 +9,14 @@ export type User = {
   dateOfBirth: Date | null;
 };
 
+export type Account = {
+  id: string;
+  name: string;
+  type: 'checking' | 'savings' | 'credit' | 'investment' | 'loan';
+  balance: number;
+  currency: string;
+};
+
 export type UserSettings = {
   theme: 'light' | 'dark';
   language: string;
