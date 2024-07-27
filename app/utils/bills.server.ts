@@ -116,7 +116,7 @@ export async function updateBill(userId: string, billId: string, data: {
 }
 
 export async function deleteBill(userId: string, billId: string) {
-  return db.bill.delete({
+  return await db.bill.delete({
     where: { id: billId, userId },
   });
 }
@@ -132,7 +132,7 @@ export async function payBill(userId: string, billId: string, paymentDate: Date)
 }
 
 export async function scheduleBillPayment(userId: string, billId: string, amount: number, paymentDate: Date): Promise<Bill> {
-  return await db.bill.update({
+  const updated = await db.bill.update({
     where: { id: billId, userId },
     data: {
       amount: amount,
@@ -141,4 +141,15 @@ export async function scheduleBillPayment(userId: string, billId: string, amount
       // frequency: BillFrequency.monthly
     },
   });
+
+  return {
+    id: updated.id,
+    name: updated.name,
+    amount: updated.amount,
+    dueDate: updated.dueDate,
+    category: updated.category,
+    status: updated.status as 'paid' | 'unpaid',
+    recurring: updated.recurring,
+    frequency: updated.frequency as 'weekly' | 'monthly' | 'yearly',
+  };
 }
