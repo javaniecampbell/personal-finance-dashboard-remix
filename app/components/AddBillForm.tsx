@@ -2,7 +2,7 @@ import React from "react";
 import { Form, useActionData } from "@remix-run/react";
 import { useFormState } from "~/hooks/useFormState";
 import type { Bill } from "~/types";
-
+import { BILL_CATEGORIES } from "~/constants/categories";
 const AddBillForm: React.FC<{
   onSubmit: (billData: Bill) => void;
   onClose: () => void;
@@ -100,14 +100,27 @@ const AddBillForm: React.FC<{
           >
             Category
           </label>
-          <input
+          {/* <input
             type="text"
             id="category"
             name="category"
             value={values.category}
             onChange={handleChange}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
+          /> */}
+          <select
+            name="category"
+            id="category"
+            onChange={handleChange}
+            value={values.category}
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+          >
+            {BILL_CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
           {errors.category && (
             <p className="mt-2 text-sm text-red-600">{errors.category}</p>
           )}
