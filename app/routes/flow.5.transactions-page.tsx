@@ -1,35 +1,52 @@
-import React, { useState } from 'react';
-import { useLoaderData, useTransition, useFetcher } from '@remix-run/react';
-import { json } from '@remix-run/node';
-import { requireUserId } from '~/utils/auth.server';
-import { getTransactions, importTransactions } from '~/utils/transactions.server';
-import { useNotification } from '~/components/ErrorNotification';
-import FileUpload from '~/components/FileUpload';
-import SideDrawer from '~/components/SideDrawer';
-import { formatDate, formatCurrency } from '~/utils/formatters';
-import { Filter, SortAsc, SortDesc, FileUp, Info } from 'lucide-react';
+import React, { useState } from "react";
+import { useLoaderData, useNavigation, useFetcher } from "@remix-run/react";
+import { json } from "@remix-run/node";
+import { requireUserId } from "~/utils/auth.server";
+import {
+  getTransactions,
+  importTransactions,
+} from "~/utils/transactions.server";
+import { useNotification } from "~/components/ErrorNotification";
+// import FileUpload from "~/components/FileUpload";
+import SideDrawer from "~/components/SideDrawer";
+import { formatDate, formatCurrency } from "~/utils/formatters";
+import { Filter, SortAsc, SortDesc, FileUp, Info } from "lucide-react";
 
 export const loader = async ({ request }) => {
   const userId = await requireUserId(request);
   const url = new URL(request.url);
-  const page = parseInt(url.searchParams.get('page') || '1', 10);
+  const page = parseInt(url.searchParams.get("page") || "1", 10);
   const limit = 20;
-  const sortBy = url.searchParams.get('sortBy') || 'date';
-  const sortOrder = url.searchParams.get('sortOrder') || 'desc';
-  const filterType = url.searchParams.get('filterType') || 'all';
+  const sortBy = url.searchParams.get("sortBy") || "date";
+  const sortOrder = url.searchParams.get("sortOrder") || "desc";
+  const filterType = url.searchParams.get("filterType") || "all";
 
-  const { transactions, totalCount } = await getTransactions(userId, { page, limit, sortBy, sortOrder, filterType });
+  const { transactions, totalCount } = await getTransactions(userId, {
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+    filterType,
+  });
 
-  return json({ transactions, totalCount, page, limit, sortBy, sortOrder, filterType });
+  return json({
+    transactions,
+    totalCount,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+    filterType,
+  });
 };
 
 export const action = async ({ request }) => {
   const userId = await requireUserId(request);
   const formData = await request.formData();
-  const file = formData.get('file');
+  const file = formData.get("file");
 
   if (!file) {
-    return json({ error: 'No file uploaded' }, { status: 400 });
+    return json({ error: "No file uploaded" }, { status: 400 });
   }
 
   try {
@@ -41,16 +58,16 @@ export const action = async ({ request }) => {
 };
 
 export default function TransactionsPage() {
-  const { 
-    transactions, 
-    totalCount, 
-    page, 
-    limit, 
-    sortBy, 
-    sortOrder, 
-    filterType 
+  const {
+    transactions,
+    totalCount,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+    filterType,
   } = useLoaderData();
-  const transition = useTransition();
+  const transition = useNavigation();
   const fetcher = useFetcher();
   const { addNotification } = useNotification();
   const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -59,27 +76,37 @@ export default function TransactionsPage() {
   const totalPages = Math.ceil(totalCount / limit);
 
   const handleSort = (field) => {
-    const newSortOrder = field === sortBy && sortOrder === 'asc' ? 'desc' : 'asc';
-    fetcher.submit({ sortBy: field, sortOrder: newSortOrder }, { method: 'get' });
+    const newSortOrder =
+      field === sortBy && sortOrder === "asc" ? "desc" : "asc";
+    fetcher.submit(
+      { sortBy: field, sortOrder: newSortOrder },
+      { method: "get" }
+    );
   };
 
   const handleFilter = (event) => {
-    fetcher.submit({ filterType: event.target.value }, { method: 'get' });
+    fetcher.submit({ filterType: event.target.value }, { method: "get" });
   };
 
   const handleFileUpload = async (file) => {
     const formData = new FormData();
-    formData.append('file', file);
-    
+    formData.append("file", file);
+
     try {
-      const result = await fetcher.submit(formData, { method: 'post', encType: 'multipart/form-data' });
+      const result = await fetcher.submit(formData, {
+        method: "post",
+        encType: "multipart/form-data",
+      });
       if (result.success) {
-        addNotification(`Successfully imported ${result.importedCount} transactions`, 'success');
+        addNotification(
+          `Successfully imported ${result.importedCount} transactions`,
+          "success"
+        );
       } else {
-        addNotification(result.error, 'error');
+        addNotification(result.error, "error");
       }
     } catch (error) {
-      addNotification('Failed to import transactions', 'error');
+      addNotification("Failed to import transactions", "error");
     }
   };
 
@@ -95,8 +122,8 @@ export default function TransactionsPage() {
       <div className="mb-6 flex justify-between items-center">
         <div className="flex items-center">
           <Filter className="mr-2" />
-          <select 
-            value={filterType} 
+          <select
+            value={filterType}
             onChange={handleFilter}
             className="border rounded px-2 py-1"
           >
@@ -105,12 +132,12 @@ export default function TransactionsPage() {
             <option value="expense">Expenses</option>
           </select>
         </div>
-        <FileUpload onFileUpload={handleFileUpload} accept=".csv,.xls,.xlsx">
+        {/* <FileUpload onFileUpload={handleFileUpload} accept=".csv,.xls,.xlsx">
           <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded inline-flex items-center">
             <FileUp className="mr-2" />
             Import Transactions
           </button>
-        </FileUpload>
+        </FileUpload> */}
       </div>
 
       <div className="overflow-x-auto">
@@ -119,8 +146,12 @@ export default function TransactionsPage() {
             <tr>
               <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Date
-                <button onClick={() => handleSort('date')} className="ml-2">
-                  {sortBy === 'date' && sortOrder === 'asc' ? <SortAsc size={16} /> : <SortDesc size={16} />}
+                <button onClick={() => handleSort("date")} className="ml-2">
+                  {sortBy === "date" && sortOrder === "asc" ? (
+                    <SortAsc size={16} />
+                  ) : (
+                    <SortDesc size={16} />
+                  )}
                 </button>
               </th>
               <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -128,8 +159,12 @@ export default function TransactionsPage() {
               </th>
               <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Amount
-                <button onClick={() => handleSort('amount')} className="ml-2">
-                  {sortBy === 'amount' && sortOrder === 'asc' ? <SortAsc size={16} /> : <SortDesc size={16} />}
+                <button onClick={() => handleSort("amount")} className="ml-2">
+                  {sortBy === "amount" && sortOrder === "asc" ? (
+                    <SortAsc size={16} />
+                  ) : (
+                    <SortDesc size={16} />
+                  )}
                 </button>
               </th>
               <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -148,7 +183,13 @@ export default function TransactionsPage() {
                   {transaction.description}
                 </td>
                 <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300">
-                  <span className={transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  <span
+                    className={
+                      transaction.amount >= 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
                     {formatCurrency(transaction.amount)}
                   </span>
                 </td>
@@ -156,7 +197,7 @@ export default function TransactionsPage() {
                   {transaction.category}
                 </td>
                 <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-right">
-                  <button 
+                  <button
                     onClick={() => openTransactionDetails(transaction)}
                     className="text-blue-600 hover:text-blue-900"
                   >
@@ -171,18 +212,23 @@ export default function TransactionsPage() {
 
       <div className="mt-4 flex justify-between items-center">
         <div>
-          Showing {(page - 1) * limit + 1} to {Math.min(page * limit, totalCount)} of {totalCount} transactions
+          Showing {(page - 1) * limit + 1} to{" "}
+          {Math.min(page * limit, totalCount)} of {totalCount} transactions
         </div>
         <div>
-          <button 
-            onClick={() => fetcher.submit({ page: page - 1 }, { method: 'get' })}
+          <button
+            onClick={() =>
+              fetcher.submit({ page: page - 1 }, { method: "get" })
+            }
             disabled={page === 1}
             className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l"
           >
             Previous
           </button>
-          <button 
-            onClick={() => fetcher.submit({ page: page + 1 }, { method: 'get' })}
+          <button
+            onClick={() =>
+              fetcher.submit({ page: page + 1 }, { method: "get" })
+            }
             disabled={page === totalPages}
             className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r"
           >
@@ -198,10 +244,19 @@ export default function TransactionsPage() {
       >
         {selectedTransaction && (
           <div>
-            <p><strong>Date:</strong> {formatDate(selectedTransaction.date)}</p>
-            <p><strong>Description:</strong> {selectedTransaction.description}</p>
-            <p><strong>Amount:</strong> {formatCurrency(selectedTransaction.amount)}</p>
-            <p><strong>Category:</strong> {selectedTransaction.category}</p>
+            <p>
+              <strong>Date:</strong> {formatDate(selectedTransaction.date)}
+            </p>
+            <p>
+              <strong>Description:</strong> {selectedTransaction.description}
+            </p>
+            <p>
+              <strong>Amount:</strong>{" "}
+              {formatCurrency(selectedTransaction.amount)}
+            </p>
+            <p>
+              <strong>Category:</strong> {selectedTransaction.category}
+            </p>
             {/* Add more details as needed */}
           </div>
         )}
