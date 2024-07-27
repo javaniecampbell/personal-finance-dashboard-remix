@@ -11,7 +11,7 @@ datasource db {
 }
 
 model User {
-  id                String             @id @default(uuid())
+  id                String             @id @default(cuid())
   email             String             @unique
   passwordHash      String
   name              String?
@@ -29,7 +29,7 @@ model User {
 }
 
 model UserSettings {
-  id                     String  @id @default(uuid())
+  id                     String  @id @default(cuid())
   userId                 String  @unique
   user                   User    @relation(fields: [userId], references: [id])
   theme                  Theme   @default(light)
@@ -42,7 +42,7 @@ model UserSettings {
 }
 
 model Transaction {
-  id          String          @id @default(uuid())
+  id          String          @id @default(cuid())
   userId      String
   user        User            @relation(fields: [userId], references: [id])
   amount      Float
@@ -55,7 +55,7 @@ model Transaction {
 }
 
 model Budget {
-  id        String       @id @default(uuid())
+  id        String       @id @default(cuid())
   userId    String
   user      User         @relation(fields: [userId], references: [id])
   name      String
@@ -67,7 +67,7 @@ model Budget {
 }
 
 model Bill {
-  id        String         @id @default(uuid())
+  id        String         @id @default(cuid())
   userId    String
   user      User           @relation(fields: [userId], references: [id])
   name      String
@@ -82,7 +82,7 @@ model Bill {
 }
 
 model SupportTicket {
-  id          String         @id @default(uuid())
+  id          String         @id @default(cuid())
   userId      String
   user        User           @relation(fields: [userId], references: [id])
   subject     String
@@ -94,7 +94,7 @@ model SupportTicket {
 }
 
 model ConnectedAccount {
-  id          String   @id @default(uuid())
+  id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   provider    String
@@ -106,7 +106,7 @@ model ConnectedAccount {
 }
 
 model FAQ {
-  id       String @id @default(uuid())
+  id       String @id @default(cuid())
   question String
   answer   String
   order    Int
