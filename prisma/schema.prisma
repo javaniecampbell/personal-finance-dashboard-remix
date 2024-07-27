@@ -6,12 +6,148 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id                String             @id @default(uuid())
+  email             String             @unique
+  passwordHash      String
+  name              String?
+  phone             String?
+  address           String?
+  dateOfBirth       DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  transactions      Transaction[]
+  budgets           Budget[]
+  bills             Bill[]
+  supportTickets    SupportTicket[]
+  connectedAccounts ConnectedAccount[]
+  settings          UserSettings?
+}
+
+model UserSettings {
+  id                     String  @id @default(uuid())
+  userId                 String  @unique
+  user                   User    @relation(fields: [userId], references: [id])
+  theme                  Theme   @default(light)
+  language               String  @default("en")
+  currency               String  @default("USD")
+  notifyOnLowBalance     Boolean @default(true)
+  notifyOnBillDue        Boolean @default(true)
+  notifyOnBudgetExceeded Boolean @default(true)
+  lowBalanceThreshold    Float   @default(100)
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  amount      Float
+  description String
+  category    String
+  date        DateTime
+  type        TransactionType
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model Budget {
+  id        String       @id @default(uuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  name      String
+  amount    Float
+  category  String
+  period    BudgetPeriod
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model Bill {
+  id        String         @id @default(uuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id])
+  name      String
+  amount    Float
+  dueDate   DateTime
+  category  String
+  status    BillStatus
+  recurring Boolean        @default(false)
+  frequency BillFrequency?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model SupportTicket {
+  id          String         @id @default(uuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+  subject     String
+  description String
+  status      TicketStatus   @default(open)
+  priority    TicketPriority
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model ConnectedAccount {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  provider    String
+  accountId   String
+  accountName String
+  accountType String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model FAQ {
+  id       String @id @default(uuid())
+  question String
+  answer   String
+  order    Int
+}
+
+enum Theme {
+  light
+  dark
+}
+
+enum TransactionType {
+  income
+  expense
+}
+
+enum BudgetPeriod {
+  weekly
+  monthly
+  yearly
+}
+
+enum BillStatus {
+  unpaid
+  paid
+}
+
+enum BillFrequency {
+  weekly
+  monthly
+  yearly
+}
+
+enum TicketStatus {
+  open
+  in_progress
+  resolved
+  closed
+}
+
+enum TicketPriority {
+  low
+  medium
+  high
 }
