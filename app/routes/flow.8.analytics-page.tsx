@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLoaderData } from '@remix-run/react';
 import { json } from '@remix-run/node';
-import { requireUserId } from '~/utils/auth.server';
+import { requireUserId } from '~/utils/auth.server.v2';
 import { getFinancialMetrics } from '~/utils/analytics.server';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '~/utils/formatters';
