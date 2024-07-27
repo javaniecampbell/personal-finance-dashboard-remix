@@ -53,3 +53,41 @@ export async function getUserDashboardData(userId: string) {
     accountBalances,
   };
 }
+
+export async function getUserProfile(userId: string): Promise<User | null> {
+  return db.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      phone: true,
+      address: true,
+      dateOfBirth: true,
+    },
+  });
+}
+
+export async function updateUserProfile(
+  userId: string,
+  profileData: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    dateOfBirth?: Date;
+  }
+): Promise<User> {
+  return db.user.update({
+    where: { id: userId },
+    data: profileData,
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      phone: true,
+      address: true,
+      dateOfBirth: true,
+    },
+  });
+}
