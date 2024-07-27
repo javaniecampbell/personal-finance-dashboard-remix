@@ -11,6 +11,7 @@ import {
 import { useNotification } from "~/components/ErrorNotification";
 import { useFormState } from "~/hooks/useFormState";
 import { PlusCircle, Edit2, Trash2 } from "lucide-react";
+import { BUDGET_CATEGORIES } from "~/constants/categories";
 
 export const loader = async ({ request }) => {
   const userId = await requireUserId(request);
@@ -118,14 +119,27 @@ const BudgetForm = ({ budget, onSubmit, onCancel }) => {
         >
           Category
         </label>
-        <input
+        {/* <input
           type="text"
           id="category"
           name="category"
           value={values.category}
           onChange={handleChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-        />
+        /> */}
+        <select
+          name="category"
+          id="category"
+          onChange={handleChange}
+          value={values.category}
+          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+        >
+          {BUDGET_CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
         {errors.category && (
           <p className="mt-1 text-sm text-red-600">{errors.category}</p>
         )}
