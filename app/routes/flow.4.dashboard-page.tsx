@@ -10,10 +10,8 @@ import {
 import { getBudgetOverview } from "~/utils/budgets.server";
 import { getUpcomingBills } from "~/utils/bills.server";
 import { useReplay } from "~/hooks/useReplay";
-import {
-  BudgetOverview,
-  UpcomingBills,
-} from "~/components/DashboardComponents";
+import { UpcomingBills } from "~/components/DashboardComponents";
+import BudgetOverview from "~/components/BudgetOverview.v2";
 import TransactionList from "~/components/TransactionList";
 import { Play, Pause, RefreshCw } from "lucide-react";
 
@@ -85,19 +83,22 @@ export default function Dashboard() {
       </header>
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900">
-                  Current Balance
-                </h2>
-                <p className="mt-1 text-3xl font-semibold text-gray-900">
-                  ${balance?.toFixed(2)}
-                </p>
+          <div className="flex flex-col gap-4">
+            <BudgetOverview budgetOverview={budgetOverview} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                  <h2 className="text-lg font-medium text-gray-900">
+                    Current Balance
+                  </h2>
+                  <p className="mt-1 text-3xl font-semibold text-gray-900">
+                    ${balance?.toFixed(2)}
+                  </p>
+                </div>
               </div>
+
+              <UpcomingBills bills={upcomingBills} />
             </div>
-            <BudgetOverview budgets={budgetOverview} />
-            <UpcomingBills bills={upcomingBills} />
           </div>
 
           <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
