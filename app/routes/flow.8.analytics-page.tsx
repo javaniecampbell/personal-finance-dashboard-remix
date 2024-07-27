@@ -40,7 +40,7 @@ export default function AnalyticsPage() {
     };
     const daysAgo = ranges[timeRange];
     const cutoff = new Date(now.setDate(now.getDate() - daysAgo));
-    return data.filter(item => new Date(item.date) >= cutoff);
+    return data?.filter(item => new Date(item.date) >= cutoff);
   };
 
   return (
@@ -92,7 +92,7 @@ export default function AnalyticsPage() {
                 dataKey="value"
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
-                {metrics.spendingByCategory.map((entry, index) => (
+                {metrics.spendingByCategory?.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
