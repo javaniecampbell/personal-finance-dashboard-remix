@@ -2,7 +2,12 @@ import React, { useState } from "react";
 import { useLoaderData, useFetcher } from "@remix-run/react";
 import { ActionFunctionArgs, json, LoaderFunctionArgs } from "@remix-run/node";
 import { requireUserId } from "~/utils/auth.server.v2";
-import { getBills, createBill } from "~/utils/bills.server";
+import {
+  getBills,
+  createBill,
+  updateBill,
+  deleteBill,
+} from "~/utils/bills.server";
 import BillList from "~/components/BillList";
 import SideDrawer from "~/components/SideDrawer";
 import AddBillForm from "~/components/AddBillForm";
@@ -30,17 +35,44 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   const userId = await requireUserId(request);
   const formData = await request.formData();
-  const bill = Object.fromEntries(formData);
-  const newBill = {
-    ...bill,
-    name: bill.name as string,
-    dueDate: new Date(bill.dueDate as string),
-    amount: parseFloat(bill.amount as string),
-    category: bill.category as string,
-    recurring: bill.recurring === "on" ? true : false,
-  };
-  await createBill(userId, newBill);
-  return json({ success: true });
+  const { _action, ...values } = Object.fromEntries(formData);
+
+  switch (_action) {
+    case "create": {
+      // const bill = Object.fromEntries(formData);
+      const newBill = {
+        ...values,
+        name: values.name as string,
+        dueDate: new Date(values.dueDate as string),
+        amount: parseFloat(values.amount as string),
+        category: values.category as string,
+        recurring: values.recurring === "on" ? true : false,
+      };
+
+      await createBill(userId, newBill);
+      return json({ success: true });
+    }
+    case "update": {
+      const editedBill = {
+        ...values,
+        id: values.id as string,
+        name: values.name as string,
+        dueDate: new Date(values.dueDate as string),
+        amount: parseFloat(values.amount as string),
+        category: values.category as string,
+        recurring: values.recurring === "on" ? true : false,
+      };
+
+      await updateBill(userId, editedBill.id, editedBill);
+      return json({ success: true });
+    }
+    case "delete": {
+      await deleteBill(userId, values.id as string);
+      return json({ success: true });
+    }
+    default:
+      return json({ error: "Invalid action" }, { status: 400 });
+  }
 };
 
 export default function BillsPage() {
