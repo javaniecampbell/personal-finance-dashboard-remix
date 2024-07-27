@@ -1,5 +1,6 @@
 import React from "react";
 import { Budget } from "~/types";
+import { formatCurrency } from "~/utils/formatters";
 
 const BudgetOverview = ({ budgets }: { budgets: Budget[] }) => (
   <div className="bg-white p-4 rounded shadow">
@@ -22,7 +23,7 @@ const UpcomingBills = ({ bills }) => (
       {bills.map((bill) => (
         <li key={bill.id} className="flex justify-between items-center">
           <span>{bill.name}</span>
-          <span>${bill?.amount?.toFixed(2)}</span>
+          <span>{formatCurrency(bill?.amount)}</span>
         </li>
       ))}
     </ul>
