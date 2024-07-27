@@ -5,7 +5,26 @@ import NestedNavigation from "~/components/NestedNavigation";
 import SideDrawer from "~/components/SideDrawer.v3.enhanced";
 
 const navigationItems = [
-  // ... (same as before)
+  {
+    label: "Dashboard",
+    to: "/dashboard",
+  },
+  {
+    label: "Finance",
+    to: "/finance",
+    children: [
+      { label: "Budgets", to: "/finance/budgets" },
+      { label: "Transactions", to: "/finance/transactions" },
+    ],
+  },
+  {
+    label: "Analytics",
+    to: "/analytics",
+    children: [
+      { label: "Overview", to: "/analytics/overview" },
+      { label: "Reports", to: "/analytics/reports" },
+    ],
+  },
 ];
 const DetailDrawerContent = ({ pushPage }) => (
   <div>
