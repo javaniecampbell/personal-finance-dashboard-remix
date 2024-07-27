@@ -23,7 +23,7 @@ const BillList: React.FC<BillListProps> = ({ bills, onPayBill, onEditBill, onDel
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-lg">
       <ul className="divide-y divide-gray-200">
-        {bills.map((bill) => (
+        {bills?.map((bill) => (
           <li key={bill.id} className="px-4 py-4 sm:px-6">
             <div className="flex items-center justify-between">
               <div>
