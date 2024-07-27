@@ -125,8 +125,10 @@ export default function Dashboard() {
                   </p>
                 </div>
               </div>
-
-              <UpcomingBills bills={upcomingBills} />
+              {/* Span 2 columns in grid */}
+              <div className="grid col-span-2">
+                <UpcomingBills bills={upcomingBills} />
+              </div>
             </div>
           </div>
 
