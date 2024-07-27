@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLoaderData, Link } from "@remix-run/react";
 import { json } from "@remix-run/node";
-import { requireUserId } from "~/utils/auth.server";
+import { requireUserId } from "~/utils/auth.server.v2";
 import { getUser } from "~/utils/user.server";
 import {
   getRecentTransactions,
@@ -92,7 +92,7 @@ export default function Dashboard() {
                   Current Balance
                 </h2>
                 <p className="mt-1 text-3xl font-semibold text-gray-900">
-                  ${balance.toFixed(2)}
+                  ${balance?.toFixed(2)}
                 </p>
               </div>
             </div>
@@ -146,7 +146,7 @@ export default function Dashboard() {
                 />
                 <p className="text-sm text-yellow-700">
                   Replaying: <strong>{currentReplayEvent.type}</strong> -
-                  Amount: ${currentReplayEvent.amount.toFixed(2)}
+                  Amount: ${currentReplayEvent?.amount?.toFixed(2)}
                 </p>
               </div>
             </div>

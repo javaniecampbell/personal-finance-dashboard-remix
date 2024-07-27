@@ -1,13 +1,14 @@
-import React from 'react';
+import React from "react";
+import { Budget } from "~/types";
 
-const BudgetOverview = ({ budgets }) => (
+const BudgetOverview = ({ budgets }: { budgets: Budget[] }) => (
   <div className="bg-white p-4 rounded shadow">
     <h2 className="text-xl font-semibold mb-2">Budget Overview</h2>
     <ul className="space-y-2">
-      {Object.entries(budgets).map(([category, amount]) => (
+      {Object.entries(budgets).map(([category, budget]) => (
         <li key={category} className="flex justify-between items-center">
           <span className="capitalize">{category}</span>
-          <span>${amount.toFixed(2)}</span>
+          <span>${budget?.amount?.toFixed(2)}</span>
         </li>
       ))}
     </ul>
@@ -21,7 +22,7 @@ const UpcomingBills = ({ bills }) => (
       {bills.map((bill) => (
         <li key={bill.id} className="flex justify-between items-center">
           <span>{bill.name}</span>
-          <span>${bill.amount.toFixed(2)}</span>
+          <span>${bill?.amount?.toFixed(2)}</span>
         </li>
       ))}
     </ul>
@@ -35,7 +36,11 @@ const TransactionHistory = ({ transactions }) => (
       {transactions.map((transaction) => (
         <li key={transaction.id} className="flex justify-between items-center">
           <span>{transaction.description}</span>
-          <span className={transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}>
+          <span
+            className={
+              transaction.amount > 0 ? "text-green-600" : "text-red-600"
+            }
+          >
             ${Math.abs(transaction.amount).toFixed(2)}
           </span>
         </li>
