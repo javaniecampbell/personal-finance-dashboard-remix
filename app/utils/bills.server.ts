@@ -37,8 +37,18 @@ export async function getBills(
     db.bill.count({ where: whereClause }),
   ]);
 
+  const billData: Bill[] = bills.map((bill) => ({
+    id: bill.id,
+    name: bill.name,
+    amount: bill.amount,
+    dueDate: bill.dueDate,
+    category: bill.category,
+    status: bill.status as 'paid' | 'unpaid',
+    recurring: bill.recurring,
+    frequency: bill.frequency as BillFrequency,
+  }));
   return {
-    bills,
+    bills: billData,
     totalCount,
     page,
     limit,
@@ -84,6 +94,7 @@ export async function createBill(userId: string, data: {
   return db.bill.create({
     data: {
       ...data,
+      status: 'unpaid',
       user: { connect: { id: userId } },
     },
   });
