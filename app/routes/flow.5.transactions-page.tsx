@@ -297,7 +297,7 @@ export default function TransactionsPage() {
         )}
 
         {isAddingTransaction && (
-          <AddTransactionForm onClose={handleCloseDrawer} />
+          <AddTransactionForm onSubmit={handleAddTransaction} onClose={handleCloseDrawer} />
         )}
       </SideDrawer>
     </div>
