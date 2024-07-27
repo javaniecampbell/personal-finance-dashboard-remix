@@ -1,3 +1,4 @@
+import type { ConnectedAccount } from "~/types";
 import { db } from "./db.server";
 
 export async function getUserSettings(userId: string) {
@@ -68,4 +69,27 @@ export async function updateUserProfile(userId: string, profileData: {
 export async function changePassword(userId: string, currentPassword: string, newPassword: string) {
   // Implement password change logic here
   // Remember to verify the current password and hash the new password
+}
+
+export async function connectAccount(userId: string, accountData: {
+  provider: string;
+  accountId: string;
+  accountName: string;
+  accountType: string;
+}): Promise<ConnectedAccount> {
+  return db.connectedAccount.create({
+    data: {
+      ...accountData,
+      userId,
+    },
+  });
+}
+
+export async function disconnectAccount(userId: string, connectedAccountId: string): Promise<void> {
+  await db.connectedAccount.delete({
+    where: {
+      id: connectedAccountId,
+      userId,
+    },
+  });
 }
