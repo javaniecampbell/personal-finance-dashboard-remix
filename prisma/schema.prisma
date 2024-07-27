@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -20,96 +17,128 @@ model User {
   dateOfBirth       DateTime?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
-  transactions      Transaction[]
-  budgets           Budget[]
+  xata_updatedat    DateTime           @default(now()) @db.Timestamptz(6)
+  xata_id           String             @unique(map: "User__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
+  xata_version      Int                @default(0)
+  xata_createdat    DateTime           @default(now()) @db.Timestamptz(6)
   bills             Bill[]
-  supportTickets    SupportTicket[]
+  budgets           Budget[]
   connectedAccounts ConnectedAccount[]
+  supportTickets    SupportTicket[]
+  transactions      Transaction[]
   settings          UserSettings?
 }
 
 model UserSettings {
-  id                     String  @id @default(cuid())
-  userId                 String  @unique
-  user                   User    @relation(fields: [userId], references: [id])
-  theme                  Theme   @default(light)
-  language               String  @default("en")
-  currency               String  @default("USD")
-  notifyOnLowBalance     Boolean @default(true)
-  notifyOnBillDue        Boolean @default(true)
-  notifyOnBudgetExceeded Boolean @default(true)
-  lowBalanceThreshold    Float   @default(100)
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  theme                  Theme    @default(light)
+  language               String   @default("en")
+  currency               String   @default("USD")
+  notifyOnLowBalance     Boolean  @default(true)
+  notifyOnBillDue        Boolean  @default(true)
+  notifyOnBudgetExceeded Boolean  @default(true)
+  lowBalanceThreshold    Float    @default(100)
+  xata_updatedat         DateTime @default(now()) @db.Timestamptz(6)
+  xata_id                String   @unique(map: "UserSettings__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
+  xata_version           Int      @default(0)
+  xata_createdat         DateTime @default(now()) @db.Timestamptz(6)
+  user                   User     @relation(fields: [userId], references: [id])
 }
 
 model Transaction {
-  id          String          @id @default(cuid())
-  userId      String
-  user        User            @relation(fields: [userId], references: [id])
-  amount      Float
-  description String
-  category    String
-  date        DateTime
-  type        TransactionType
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id             String          @id @default(cuid())
+  userId         String
+  amount         Float
+  description    String
+  category       String
+  date           DateTime
+  type           TransactionType
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  xata_version   Int             @default(0)
+  xata_createdat DateTime        @default(now()) @db.Timestamptz(6)
+  xata_updatedat DateTime        @default(now()) @db.Timestamptz(6)
+  xata_id        String          @unique(map: "Transaction__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
+  user           User            @relation(fields: [userId], references: [id])
 }
 
 model Budget {
-  id        String       @id @default(cuid())
-  userId    String
-  user      User         @relation(fields: [userId], references: [id])
-  name      String
-  amount    Float
-  category  String
-  period    BudgetPeriod
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id             String       @id @default(cuid())
+  userId         String
+  name           String
+  amount         Float
+  category       String
+  period         BudgetPeriod
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  xata_id        String       @unique(map: "Budget__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
+  xata_version   Int          @default(0)
+  xata_createdat DateTime     @default(now()) @db.Timestamptz(6)
+  xata_updatedat DateTime     @default(now()) @db.Timestamptz(6)
+  user           User         @relation(fields: [userId], references: [id])
 }
 
 model Bill {
-  id        String         @id @default(cuid())
-  userId    String
-  user      User           @relation(fields: [userId], references: [id])
-  name      String
-  amount    Float
-  dueDate   DateTime
-  category  String
-  status    BillStatus
-  recurring Boolean        @default(false)
-  frequency BillFrequency?
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id             String         @id @default(cuid())
+  userId         String
+  name           String
+  amount         Float
+  dueDate        DateTime
+  category       String
+  status         BillStatus
+  recurring      Boolean        @default(false)
+  frequency      BillFrequency?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  xata_id        String         @unique(map: "Bill__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
+  xata_version   Int            @default(0)
+  xata_createdat DateTime       @default(now()) @db.Timestamptz(6)
+  xata_updatedat DateTime       @default(now()) @db.Timestamptz(6)
+  user           User           @relation(fields: [userId], references: [id])
 }
 
 model SupportTicket {
-  id          String         @id @default(cuid())
-  userId      String
-  user        User           @relation(fields: [userId], references: [id])
-  subject     String
-  description String
-  status      TicketStatus   @default(open)
-  priority    TicketPriority
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id             String         @id @default(cuid())
+  userId         String
+  subject        String
+  description    String
+  status         TicketStatus   @default(open)
+  priority       TicketPriority
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  xata_id        String         @unique(map: "SupportTicket__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
+  xata_version   Int            @default(0)
+  xata_createdat DateTime       @default(now()) @db.Timestamptz(6)
+  xata_updatedat DateTime       @default(now()) @db.Timestamptz(6)
+  user           User           @relation(fields: [userId], references: [id])
 }
 
 model ConnectedAccount {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  provider    String
-  accountId   String
-  accountName String
-  accountType String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  provider       String
+  accountId      String
+  accountName    String
+  accountType    String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  xata_id        String   @unique(map: "ConnectedAccount__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
+  xata_version   Int      @default(0)
+  xata_createdat DateTime @default(now()) @db.Timestamptz(6)
+  xata_updatedat DateTime @default(now()) @db.Timestamptz(6)
+  user           User     @relation(fields: [userId], references: [id])
 }
 
 model FAQ {
-  id       String @id @default(cuid())
-  question String
-  answer   String
-  order    Int
+  id             String   @id @default(cuid())
+  question       String
+  answer         String
+  order          Int
+  xata_updatedat DateTime @default(now()) @db.Timestamptz(6)
+  xata_id        String   @unique(map: "FAQ__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
+  xata_version   Int      @default(0)
+  xata_createdat DateTime @default(now()) @db.Timestamptz(6)
 }
 
 enum Theme {
