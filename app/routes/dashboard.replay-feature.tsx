@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useReplay } from "~/hooks/useReplay";
 import { Play, Pause, RefreshCw } from "lucide-react";
 import { json } from "@remix-run/node";
