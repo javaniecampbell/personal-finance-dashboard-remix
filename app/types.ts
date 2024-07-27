@@ -85,11 +85,19 @@ export type FinancialHealthIndicators = {
   netWorth: number;
 };
 
+export type BudgetPerformance = {
+  id: string;
+  name: string;
+  category: string;
+  budgetedAmount: number;
+  actualAmount: number;
+  performance: number;
+};
 export type ChartData = {
   [key: string]: string | number;
 };
 
-export type BudgetPerformance = {
+export type SimpleBudgetPerformance = {
   category: string;
   budgeted: number;
   actual: number;
