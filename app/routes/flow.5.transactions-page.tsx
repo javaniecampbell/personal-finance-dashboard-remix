@@ -11,6 +11,7 @@ import FileUpload from "~/components/FileUpload";
 import SideDrawer from "~/components/SideDrawer";
 import { formatDate, formatCurrency } from "~/utils/formatters";
 import { Filter, SortAsc, SortDesc, FileUp, Info } from "lucide-react";
+import AddTransactionForm from "~/components/AddTransactionForm";
 
 export const loader = async ({ request }) => {
   const userId = await requireUserId(request);
@@ -72,6 +73,7 @@ export default function TransactionsPage() {
   const { addNotification } = useNotification();
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isAddingTransaction, setIsAddingTransaction] = useState(false);
 
   const totalPages = Math.ceil(totalCount / limit);
 
@@ -114,6 +116,14 @@ export default function TransactionsPage() {
     setSelectedTransaction(transaction);
     setIsDrawerOpen(true);
   };
+  const handleAddTransaction = () => {
+    setIsAddingTransaction(true);
+    setIsDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -132,12 +142,20 @@ export default function TransactionsPage() {
             <option value="expense">Expenses</option>
           </select>
         </div>
-         <FileUpload onFileUpload={handleFileUpload} accept=".csv,.xls,.xlsx"> 
-          <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded inline-flex items-center">
-            <FileUp className="mr-2" />
-            Import Transactions
+        <div className="flex justify-between gap-2">
+          <button
+            onClick={handleAddTransaction}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Add Transaction
           </button>
-        </FileUpload>
+          <FileUpload onFileUpload={handleFileUpload} accept=".csv,.xls,.xlsx">
+            <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded inline-flex items-center">
+              <FileUp className="mr-2" />
+              Import Transactions
+            </button>
+          </FileUpload>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -240,7 +258,7 @@ export default function TransactionsPage() {
       <SideDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        title="Transaction Details"
+        title={isAddingTransaction ? "Add Transaction" : "Transaction Details"}
       >
         {selectedTransaction && (
           <div>
@@ -259,6 +277,10 @@ export default function TransactionsPage() {
             </p>
             {/* Add more details as needed */}
           </div>
+        )}
+
+        {isAddingTransaction && (
+          <AddTransactionForm onClose={handleCloseDrawer} />
         )}
       </SideDrawer>
     </div>
