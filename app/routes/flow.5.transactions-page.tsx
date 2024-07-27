@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useLoaderData, useNavigation, useFetcher } from "@remix-run/react";
 import { json } from "@remix-run/node";
-import { requireUserId } from "~/utils/auth.server";
+import { requireUserId } from "~/utils/auth.server.v2";
 import {
   getTransactions,
   importTransactions,
