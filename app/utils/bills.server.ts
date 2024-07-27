@@ -1,3 +1,4 @@
+import { Bill } from "~/types";
 import { db } from "./db.server";
 
 export async function getUpcomingBills(userId: string) {
@@ -71,6 +72,16 @@ export async function payBill(userId: string, billId: string, paymentDate: Date)
     data: {
       status: 'paid',
       paidDate: paymentDate,
+    },
+  });
+}
+
+export async function scheduleBillPayment(userId: string, billId: string, paymentDate: Date): Promise<Bill> {
+  return db.bill.update({
+    where: { id: billId, userId },
+    data: {
+      status: 'paid',
+      dueDate: paymentDate,
     },
   });
 }

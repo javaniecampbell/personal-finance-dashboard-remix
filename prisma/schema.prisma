@@ -86,6 +86,7 @@ model Bill {
   name           String
   amount         Float
   dueDate        DateTime
+  paidDate       DateTime?
   category       String
   status         BillStatus
   recurring      Boolean        @default(false)
