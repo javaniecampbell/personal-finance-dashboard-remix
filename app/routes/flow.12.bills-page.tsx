@@ -80,6 +80,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return json({ success: true });
     }
     case "delete": {
+      if (!values.id) {
+        return json({ error: "Bill ID is required" }, { status: 400 });
+      }
       await deleteBill(userId, values.id as string);
       return json({ success: true });
     }
