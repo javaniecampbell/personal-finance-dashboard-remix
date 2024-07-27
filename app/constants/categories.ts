@@ -7,6 +7,8 @@ export const TRANSACTION_CATEGORIES = [
     'Entertainment',
     'Salary',
     'Investments',
+    'Savings',
+    'Transportation',
     // ... more categories
   ];
   
