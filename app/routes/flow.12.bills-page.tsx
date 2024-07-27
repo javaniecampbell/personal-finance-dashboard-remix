@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { useLoaderData, useFetcher } from "@remix-run/react";
-import { json } from "@remix-run/node";
-import { requireUserId } from "~/utils/auth.server";
+import { ActionFunctionArgs, json, LoaderFunctionArgs } from "@remix-run/node";
+import { requireUserId } from "~/utils/auth.server.v2";
 import { getBills, createBill } from "~/utils/bills.server";
 import BillList from "~/components/BillList";
 import SideDrawer from "~/components/SideDrawer";
 import AddBillForm from "~/components/AddBillForm";
 
-export const loader = async ({ request }) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userId = await requireUserId(request);
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page") || "1", 10);
@@ -27,16 +27,24 @@ export const loader = async ({ request }) => {
   return json({ bills });
 };
 
-export const action = async ({ request }) => {
+export const action = async ({ request }: ActionFunctionArgs) => {
   const userId = await requireUserId(request);
   const formData = await request.formData();
   const bill = Object.fromEntries(formData);
-  await createBill(userId, bill);
+  const newBill = {
+    ...bill,
+    name: bill.name as string,
+    dueDate: new Date(bill.dueDate as string),
+    amount: parseFloat(bill.amount as string),
+    category: bill.category as string,
+    recurring: bill.recurring === "on" ? true : false,
+  };
+  await createBill(userId, newBill);
   return json({ success: true });
 };
 
 export default function BillsPage() {
-  const { bills } = useLoaderData();
+  const { bills } = useLoaderData<typeof loader>();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const fetcher = useFetcher();
 
@@ -59,7 +67,7 @@ export default function BillsPage() {
           Add Bill
         </button>
       </div>
-      <BillList bills={bills} />
+      <BillList bills={bills.bills} />
       <SideDrawer
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
