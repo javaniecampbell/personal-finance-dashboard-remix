@@ -19,7 +19,7 @@ import { Play, Pause, RefreshCw } from "lucide-react";
 
 export const loader = async ({ request }) => {
   const userId = await requireUserId(request);
-  const user = await getUser(+userId);
+  const user = await getUser(userId);
   const recentTransactions = await getRecentTransactions(userId, 5);
   const accountBalance = await getAccountBalance(userId);
   const budgetOverview = await getBudgetOverview(userId);

@@ -1,6 +1,6 @@
 import { db } from "./db.server";
 
-export async function getUser(userId: number) {
+export async function getUser(userId: string) {
   return db.user.findUnique({
     where: { id: userId },
   });
