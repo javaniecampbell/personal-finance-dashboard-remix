@@ -6,7 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
-import styles from "./styles/tailwind.css";
+import "./styles/tailwind.css";
 import { MetaFunction } from "@remix-run/node";
 
 export const meta: MetaFunction = () => [
@@ -18,9 +18,9 @@ export const meta: MetaFunction = () => [
   { title: "Finance Dashboard" },
 ];
 
-export function links() {
-  return [{ rel: "stylesheet", href: styles }];
-}
+// export function links() {
+//   return [{ rel: "stylesheet", href: styles }];
+// }
 
 export function Layout({ children }: { children: Readonly<React.ReactNode> }) {
   return (
