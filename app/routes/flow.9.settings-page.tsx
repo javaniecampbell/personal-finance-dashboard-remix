@@ -1,37 +1,66 @@
-import React, { useState } from 'react';
-import { useLoaderData, useFetcher } from '@remix-run/react';
-import { json, redirect } from '@remix-run/node';
-import { requireUserId } from '~/utils/auth.server';
-import { getUserSettings, updateUserSettings } from '~/utils/settings.server';
-import { useNotification } from '~/components/ErrorNotification';
-import { useFormState } from '~/hooks/useFormState';
-import { Settings, Bell, Link, Moon, Sun, ChevronRight } from 'lucide-react';
+import React, { useState } from "react";
+import { useLoaderData, useFetcher } from "@remix-run/react";
+import {
+  ActionFunctionArgs,
+  json,
+  LoaderFunctionArgs,
+  redirect,
+} from "@remix-run/node";
+import { requireUserId } from "~/utils/auth.server";
+import {
+  getUserSettings,
+  updateUserSettings,
+  getConnectedAccounts,
+  connectAccount,
+  disconnectAccount,
+} from "~/utils/settings.server";
+import { useNotification } from "~/components/ErrorNotification";
+import { useFormState } from "~/hooks/useFormState";
+import { Settings, Bell, Link, Moon, Sun, ChevronRight } from "lucide-react";
+import ConnectedAccountsModal from "~/components/ConnectedAccountsModal";
 
-export const loader = async ({ request }) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userId = await requireUserId(request);
   const settings = await getUserSettings(userId);
-  return json({ settings });
+  const connectedAccounts = await getConnectedAccounts(userId);
+  return json({ settings, connectedAccounts });
 };
 
-export const action = async ({ request }) => {
+export const action = async ({ request }: ActionFunctionArgs) => {
   const userId = await requireUserId(request);
   const formData = await request.formData();
-  const updates = Object.fromEntries(formData);
-  
-  await updateUserSettings(userId, updates);
-  return redirect('/settings');
+  const action = formData.get("_action");
+  switch (action) {
+    case "updateSettings": {
+      const updates = Object.fromEntries(formData);
+      await updateUserSettings(userId, updates);
+      return redirect("/settings");
+    }
+    case "connectAccount": {
+      const connectionType = formData.get("connectionType");
+      await connectAccount(userId, connectionType);
+      return json({ success: true });
+    }
+    case "disconnectAccount": {
+      const accountId = formData.get("accountId");
+      await disconnectAccount(userId, accountId);
+      return json({ success: true });
+    }
+    default:
+      throw new Error("Invalid action");
+  }
 };
 
 const SettingsSection = ({ title, children, icon }) => (
   <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
     <div className="px-4 py-5 sm:px-6 flex items-center">
       {icon}
-      <h3 className="text-lg leading-6 font-medium text-gray-900 ml-2">{title}</h3>
+      <h3 className="text-lg leading-6 font-medium text-gray-900 ml-2">
+        {title}
+      </h3>
     </div>
     <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-      <dl className="sm:divide-y sm:divide-gray-200">
-        {children}
-      </dl>
+      <dl className="sm:divide-y sm:divide-gray-200">{children}</dl>
     </div>
   </div>
 );
@@ -46,10 +75,11 @@ const SettingsItem = ({ label, children }) => (
 );
 
 export default function SettingsPage() {
-  const { settings } = useLoaderData();
+  const { settings, connectedAccounts } = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
   const { addNotification } = useNotification();
-  const [theme, setTheme] = useState(settings.theme || 'light');
+  const [theme, setTheme] = useState(settings.theme || "light");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { values, handleChange, handleSubmit } = useFormState(
     {
@@ -63,12 +93,32 @@ export default function SettingsPage() {
   );
 
   const handleSettingsSubmit = (formData) => {
-    fetcher.submit(formData, { method: 'post' });
-    addNotification('Settings updated successfully', 'success');
+    fetcher.submit(
+      { ...formData, _action: "updateSettings" },
+      { method: "post" }
+    );
+    addNotification("Settings updated successfully", "success");
+  };
+
+  const handleConnectAccount = (connectionType) => {
+    fetcher.submit(
+      { _action: "connectAccount", connectionType },
+      { method: "post" }
+    );
+    addNotification(`Connecting account via ${connectionType}...`, "info");
+    setIsModalOpen(false);
+  };
+
+  const handleDisconnectAccount = (accountId) => {
+    fetcher.submit(
+      { _action: "disconnectAccount", accountId },
+      { method: "post" }
+    );
+    addNotification("Account disconnected successfully", "success");
   };
 
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
+    const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     handleSettingsSubmit({ ...values, theme: newTheme });
   };
@@ -98,7 +148,10 @@ export default function SettingsPage() {
           </SettingsItem>
         </SettingsSection>
 
-        <SettingsSection title="Notification Preferences" icon={<Bell size={24} />}>
+        <SettingsSection
+          title="Notification Preferences"
+          icon={<Bell size={24} />}
+        >
           <SettingsItem label="Low Balance Alert">
             <div className="flex items-center">
               <input
@@ -140,40 +193,51 @@ export default function SettingsPage() {
           <SettingsItem label="Bank Accounts">
             <button
               type="button"
+              onClick={() => setIsModalOpen(true)}
               className="text-indigo-600 hover:text-indigo-900 flex items-center"
             >
-              Manage Connected Accounts <ChevronRight size={16} className="ml-1" />
+              Manage Connected Accounts{" "}
+              <ChevronRight size={16} className="ml-1" />
             </button>
           </SettingsItem>
         </SettingsSection>
 
-        <SettingsSection title="Appearance" icon={theme === 'light' ? <Sun size={24} /> : <Moon size={24} />}>
+        <SettingsSection
+          title="Appearance"
+          icon={theme === "light" ? <Sun size={24} /> : <Moon size={24} />}
+        >
           <SettingsItem label="Theme">
             <div className="flex items-center">
-              <span className="mr-2">{theme === 'light' ? 'Light' : 'Dark'} Mode</span>
+              <span className="mr-2">
+                {theme === "light" ? "Light" : "Dark"} Mode
+              </span>
               <button
                 type="button"
                 onClick={toggleTheme}
                 className={`${
-                  theme === 'light' ? 'bg-gray-200' : 'bg-indigo-600'
+                  theme === "light" ? "bg-gray-200" : "bg-indigo-600"
                 } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
               >
                 <span className="sr-only">Toggle theme</span>
                 <span
                   className={`${
-                    theme === 'light' ? 'translate-x-0' : 'translate-x-5'
+                    theme === "light" ? "translate-x-0" : "translate-x-5"
                   } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
                 >
                   <span
                     className={`${
-                      theme === 'light' ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100'
+                      theme === "light"
+                        ? "opacity-100 ease-in duration-200"
+                        : "opacity-0 ease-out duration-100"
                     } absolute inset-0 h-full w-full flex items-center justify-center transition-opacity`}
                   >
                     <Sun size={12} />
                   </span>
                   <span
                     className={`${
-                      theme === 'light' ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200'
+                      theme === "light"
+                        ? "opacity-0 ease-out duration-100"
+                        : "opacity-100 ease-in duration-200"
                     } absolute inset-0 h-full w-full flex items-center justify-center transition-opacity`}
                   >
                     <Moon size={12} />
@@ -193,6 +257,14 @@ export default function SettingsPage() {
           </button>
         </div>
       </form>
+
+      <ConnectedAccountsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        connectedAccounts={connectedAccounts}
+        onConnect={handleConnectAccount}
+        onDisconnect={handleDisconnectAccount}
+      />
     </div>
   );
 }
