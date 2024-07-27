@@ -1,11 +1,11 @@
-?export function formatCurrency(amount: number, currency: string = 'USD'): string {
+export function formatCurrency(amount: number, currency: string = 'USD'): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency,
   }).format(amount);
 }
 
-export function formatDate(date: Date | string, format: string): string {
+export function formatDate(date: Date | string, format?: string): string {
   if (format === 'YYYY-MM-DD') {
     return new Date(date).toISOString().split('T')[0];
   }
