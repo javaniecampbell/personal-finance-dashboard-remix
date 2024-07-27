@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
-import { useLoaderData, useFetcher } from '@remix-run/react';
-import { json, redirect } from '@remix-run/node';
-import { requireUserId } from '~/utils/auth.server';
-import { getBudgets, createBudget, updateBudget, deleteBudget } from '~/utils/budgets.server';
-import { useNotification } from '~/components/ErrorNotification';
-import { useFormState } from '~/hooks/useFormState';
-import { PlusCircle, Edit2, Trash2 } from 'lucide-react';
+import React, { useState } from "react";
+import { useLoaderData, useFetcher } from "@remix-run/react";
+import { json, redirect } from "@remix-run/node";
+import { requireUserId } from "~/utils/auth.server";
+import {
+  getBudgets,
+  createBudget,
+  updateBudget,
+  deleteBudget,
+} from "~/utils/budgets.server";
+import { useNotification } from "~/components/ErrorNotification";
+import { useFormState } from "~/hooks/useFormState";
+import { PlusCircle, Edit2, Trash2 } from "lucide-react";
 
 export const loader = async ({ request }) => {
   const userId = await requireUserId(request);
@@ -16,50 +21,63 @@ export const loader = async ({ request }) => {
 export const action = async ({ request }) => {
   const userId = await requireUserId(request);
   const formData = await request.formData();
-  const action = formData.get('_action');
+  const action = formData.get("_action");
 
   switch (action) {
-    case 'create':
+    case "create": {
       const newBudget = {
-        name: formData.get('name'),
-        amount: parseFloat(formData.get('amount')),
-        category: formData.get('category'),
+        name: formData.get("name"),
+        amount: parseFloat(formData.get("amount")),
+        category: formData.get("category"),
+        period: "monthly",
       };
+      // @ts-ignore
       await createBudget(userId, newBudget);
       break;
-    case 'update':
+    }
+    case "update": {
+      const budgetId = formData.get("id");
       const updatedBudget = {
-        id: formData.get('id'),
-        name: formData.get('name'),
-        amount: parseFloat(formData.get('amount')),
-        category: formData.get('category'),
+        id: formData.get("id"),
+        name: formData.get("name"),
+        amount: parseFloat(formData.get("amount")),
+        category: formData.get("category"),
       };
-      await updateBudget(userId, updatedBudget);
+      await updateBudget(userId, budgetId, updatedBudget);
       break;
-    case 'delete':
-      await deleteBudget(userId, formData.get('id'));
+    }
+    case "delete":
+      await deleteBudget(userId, formData.get("id"));
       break;
     default:
-      throw new Error('Invalid action');
+      throw new Error("Invalid action");
   }
 
-  return redirect('/budgets');
+  return redirect("/budgets");
 };
 
 const BudgetForm = ({ budget, onSubmit, onCancel }) => {
   const { values, handleChange, handleSubmit, errors } = useFormState(
-    budget || { name: '', amount: '', category: '' },
+    budget || { name: "", amount: "", category: "" },
     {
-      name: { required: 'Budget name is required' },
-      amount: { required: 'Amount is required', pattern: { value: /^\d+(\.\d{1,2})?$/, message: 'Invalid amount' } },
-      category: { required: 'Category is required' },
+      name: { required: "Budget name is required" },
+      amount: {
+        required: "Amount is required",
+        pattern: { value: /^\d+(\.\d{1,2})?$/, message: "Invalid amount" },
+      },
+      category: { required: "Category is required" },
     }
   );
 
   return (
     <form onSubmit={(e) => handleSubmit(e, onSubmit)} className="space-y-4">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Budget Name</label>
+        <label
+          htmlFor="name"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Budget Name
+        </label>
         <input
           type="text"
           id="name"
@@ -68,10 +86,17 @@ const BudgetForm = ({ budget, onSubmit, onCancel }) => {
           onChange={handleChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
         />
-        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+        {errors.name && (
+          <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+        )}
       </div>
       <div>
-        <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount</label>
+        <label
+          htmlFor="amount"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Amount
+        </label>
         <input
           type="number"
           id="amount"
@@ -81,10 +106,17 @@ const BudgetForm = ({ budget, onSubmit, onCancel }) => {
           step="0.01"
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
         />
-        {errors.amount && <p className="mt-1 text-sm text-red-600">{errors.amount}</p>}
+        {errors.amount && (
+          <p className="mt-1 text-sm text-red-600">{errors.amount}</p>
+        )}
       </div>
       <div>
-        <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
+        <label
+          htmlFor="category"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Category
+        </label>
         <input
           type="text"
           id="category"
@@ -93,23 +125,25 @@ const BudgetForm = ({ budget, onSubmit, onCancel }) => {
           onChange={handleChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
         />
-        {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
+        {errors.category && (
+          <p className="mt-1 text-sm text-red-600">{errors.category}</p>
+        )}
       </div>
       <div className="flex justify-end space-x-2">
         {onCancel && (
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={onCancel}
             className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Cancel
           </button>
         )}
-        <button 
+        <button
           type="submit"
           className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
-          {budget ? 'Update' : 'Create'} Budget
+          {budget ? "Update" : "Create"} Budget
         </button>
       </div>
     </form>
@@ -123,21 +157,28 @@ export default function BudgetManagementPage() {
   const [editingBudget, setEditingBudget] = useState(null);
 
   const handleCreateSubmit = (formData) => {
-    fetcher.submit({ ...formData, _action: 'create' }, { method: 'post' });
-    addNotification('Budget created successfully', 'success');
+    fetcher.submit({ ...formData, _action: "create" }, { method: "post" });
+    addNotification("Budget created successfully", "success");
   };
 
   const handleUpdateSubmit = (formData) => {
-    fetcher.submit({ ...formData, id: editingBudget.id, _action: 'update' }, { method: 'post' });
+    fetcher.submit(
+      { ...formData, id: editingBudget.id, _action: "update" },
+      { method: "post" }
+    );
     setEditingBudget(null);
-    addNotification('Budget updated successfully', 'success');
+    addNotification("Budget updated successfully", "success");
   };
 
   const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this budget?')) {
-      fetcher.submit({ id, _action: 'delete' }, { method: 'post' });
-      addNotification('Budget deleted successfully', 'success');
+    if (window.confirm("Are you sure you want to delete this budget?")) {
+      fetcher.submit({ id, _action: "delete" }, { method: "post" });
+      addNotification("Budget deleted successfully", "success");
     }
+  };
+
+  const handleCancel = () => {
+    setEditingBudget(null);
   };
 
   return (
@@ -146,7 +187,11 @@ export default function BudgetManagementPage() {
 
       <div className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Create New Budget</h2>
-        <BudgetForm onSubmit={handleCreateSubmit} />
+        <BudgetForm
+          budget={editingBudget}
+          onSubmit={handleCreateSubmit}
+          onCancel={handleCancel}
+        />
       </div>
 
       <div>
@@ -155,16 +200,20 @@ export default function BudgetManagementPage() {
           {budgets.map((budget) => (
             <div key={budget.id} className="bg-white shadow rounded-lg p-6">
               {editingBudget?.id === budget.id ? (
-                <BudgetForm 
-                  budget={budget} 
+                <BudgetForm
+                  budget={budget}
                   onSubmit={handleUpdateSubmit}
                   onCancel={() => setEditingBudget(null)}
                 />
               ) : (
                 <>
                   <h3 className="text-lg font-semibold mb-2">{budget.name}</h3>
-                  <p className="text-gray-600 mb-1">Category: {budget.category}</p>
-                  <p className="text-2xl font-bold mb-4">${budget.amount.toFixed(2)}</p>
+                  <p className="text-gray-600 mb-1">
+                    Category: {budget.category}
+                  </p>
+                  <p className="text-2xl font-bold mb-4">
+                    ${budget.amount.toFixed(2)}
+                  </p>
                   <div className="flex justify-end space-x-2">
                     <button
                       onClick={() => setEditingBudget(budget)}
