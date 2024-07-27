@@ -1,23 +1,48 @@
-import React from 'react';
-import { Form, useActionData } from '@remix-run/react';
-import { useFormState } from '~/hooks/useFormState';
+import React from "react";
+import { Form, useActionData } from "@remix-run/react";
+import { useFormState } from "~/hooks/useFormState";
+import type { Bill } from "~/types";
 
-const AddBillForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+const AddBillForm: React.FC<{
+  onSubmit: (billData: Bill) => void;
+  onClose: () => void;
+}> = ({ onSubmit, onClose }) => {
   const actionData = useActionData();
   const { values, handleChange, handleSubmit, errors } = useFormState({
-    name: '',
-    amount: '',
-    dueDate: new Date().toISOString().split('T')[0],
-    category: '',
+    name: "",
+    amount: "",
+    dueDate: new Date().toISOString().split("T")[0],
+    category: "",
     recurring: false,
-    frequency: 'monthly',
+    frequency: "monthly",
   });
 
+  const handleAddBill = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // const formData = new FormData(e.currentTarget);
+    // const billData = {
+    //   name: formData.get('name') as string,
+    //   amount: parseFloat(formData.get('amount') as string),
+    //   dueDate: new Date(formData.get('dueDate') as string),
+    //   category: formData.get('category') as string,
+    //   recurring: formData.get('recurring') === 'on',
+    //   frequency: formData.get('frequency') as 'weekly' | 'monthly' | 'yearly',
+    // };
+
+    handleSubmit(onSubmit)(e);
+    onClose();
+  };
+
   return (
-    <Form method="post" onSubmit={(e) => handleSubmit(e, onClose)}>
+    <Form method="post" onSubmit={handleAddBill}>
       <div className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">Bill Name</label>
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Bill Name
+          </label>
           <input
             type="text"
             id="name"
@@ -26,10 +51,17 @@ const AddBillForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             onChange={handleChange}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
-          {errors.name && <p className="mt-2 text-sm text-red-600">{errors.name}</p>}
+          {errors.name && (
+            <p className="mt-2 text-sm text-red-600">{errors.name}</p>
+          )}
         </div>
         <div>
-          <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount</label>
+          <label
+            htmlFor="amount"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Amount
+          </label>
           <input
             type="number"
             id="amount"
@@ -38,10 +70,17 @@ const AddBillForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             onChange={handleChange}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
-          {errors.amount && <p className="mt-2 text-sm text-red-600">{errors.amount}</p>}
+          {errors.amount && (
+            <p className="mt-2 text-sm text-red-600">{errors.amount}</p>
+          )}
         </div>
         <div>
-          <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">Due Date</label>
+          <label
+            htmlFor="dueDate"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Due Date
+          </label>
           <input
             type="date"
             id="dueDate"
@@ -50,10 +89,17 @@ const AddBillForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             onChange={handleChange}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
-          {errors.dueDate && <p className="mt-2 text-sm text-red-600">{errors.dueDate}</p>}
+          {errors.dueDate && (
+            <p className="mt-2 text-sm text-red-600">{errors.dueDate}</p>
+          )}
         </div>
         <div>
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
+          <label
+            htmlFor="category"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Category
+          </label>
           <input
             type="text"
             id="category"
@@ -62,7 +108,9 @@ const AddBillForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             onChange={handleChange}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
-          {errors.category && <p className="mt-2 text-sm text-red-600">{errors.category}</p>}
+          {errors.category && (
+            <p className="mt-2 text-sm text-red-600">{errors.category}</p>
+          )}
         </div>
         <div className="flex items-start">
           <div className="flex items-center h-5">
@@ -76,12 +124,19 @@ const AddBillForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             />
           </div>
           <div className="ml-3 text-sm">
-            <label htmlFor="recurring" className="font-medium text-gray-700">Recurring</label>
+            <label htmlFor="recurring" className="font-medium text-gray-700">
+              Recurring
+            </label>
           </div>
         </div>
         {values.recurring && (
           <div>
-            <label htmlFor="frequency" className="block text-sm font-medium text-gray-700">Frequency</label>
+            <label
+              htmlFor="frequency"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Frequency
+            </label>
             <select
               id="frequency"
               name="frequency"
@@ -93,7 +148,9 @@ const AddBillForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               <option value="monthly">Monthly</option>
               <option value="yearly">Yearly</option>
             </select>
-            {errors.frequency && <p className="mt-2 text-sm text-red-600">{errors.frequency}</p>}
+            {errors.frequency && (
+              <p className="mt-2 text-sm text-red-600">{errors.frequency}</p>
+            )}
           </div>
         )}
       </div>
