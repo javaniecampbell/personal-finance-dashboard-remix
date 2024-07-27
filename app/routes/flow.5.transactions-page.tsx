@@ -7,7 +7,7 @@ import {
   importTransactions,
 } from "~/utils/transactions.server";
 import { useNotification } from "~/components/ErrorNotification";
-// import FileUpload from "~/components/FileUpload";
+import FileUpload from "~/components/FileUpload";
 import SideDrawer from "~/components/SideDrawer";
 import { formatDate, formatCurrency } from "~/utils/formatters";
 import { Filter, SortAsc, SortDesc, FileUp, Info } from "lucide-react";
@@ -132,12 +132,12 @@ export default function TransactionsPage() {
             <option value="expense">Expenses</option>
           </select>
         </div>
-        {/* <FileUpload onFileUpload={handleFileUpload} accept=".csv,.xls,.xlsx">
+         <FileUpload onFileUpload={handleFileUpload} accept=".csv,.xls,.xlsx"> 
           <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded inline-flex items-center">
             <FileUp className="mr-2" />
             Import Transactions
           </button>
-        </FileUpload> */}
+        </FileUpload>
       </div>
 
       <div className="overflow-x-auto">
