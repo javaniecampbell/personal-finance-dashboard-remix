@@ -62,22 +62,25 @@ model Transaction {
   xata_updatedat DateTime        @default(now()) @db.Timestamptz(6)
   xata_id        String          @unique(map: "Transaction__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
   user           User            @relation(fields: [userId], references: [id])
+  budget         Budget?         @relation(fields: [budgetId], references: [id])
+  budgetId       String?
 }
 
 model Budget {
-  id             String       @id @default(cuid())
+  id             String        @id @default(cuid())
   userId         String
   name           String
   amount         Float
   category       String
   period         BudgetPeriod
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  xata_id        String       @unique(map: "Budget__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
-  xata_version   Int          @default(0)
-  xata_createdat DateTime     @default(now()) @db.Timestamptz(6)
-  xata_updatedat DateTime     @default(now()) @db.Timestamptz(6)
-  user           User         @relation(fields: [userId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  xata_id        String        @unique(map: "Budget__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
+  xata_version   Int           @default(0)
+  xata_createdat DateTime      @default(now()) @db.Timestamptz(6)
+  xata_updatedat DateTime      @default(now()) @db.Timestamptz(6)
+  user           User          @relation(fields: [userId], references: [id])
+  transactions   Transaction[] // New field to establish the relationship
 }
 
 model Bill {
