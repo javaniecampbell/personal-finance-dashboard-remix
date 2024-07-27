@@ -1,11 +1,17 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 
 const ReplayContext = createContext();
 
 export const useReplay = () => {
   const context = useContext(ReplayContext);
   if (!context) {
-    throw new Error('useReplay must be used within a ReplayProvider');
+    throw new Error("useReplay must be used within a ReplayProvider");
   }
   return context;
 };
@@ -17,15 +23,15 @@ export const ReplayProvider = ({ children }) => {
   const [currentReplay, setCurrentReplay] = useState(null);
 
   useEffect(() => {
-    const storedEvents = localStorage.getItem('replayEvents');
-    if (storedEvents) {
+    const storedEvents = localStorage.getItem("replayEvents");
+    if (storedEvents !== null && storedEvents !== undefined) {
       setEvents(JSON.parse(storedEvents));
     }
   }, []);
 
   const saveEvents = useCallback((newEvents) => {
     setEvents(newEvents);
-    localStorage.setItem('replayEvents', JSON.stringify(newEvents));
+    localStorage.setItem("replayEvents", JSON.stringify(newEvents));
   }, []);
 
   const startRecording = useCallback(() => {
@@ -37,23 +43,29 @@ export const ReplayProvider = ({ children }) => {
     setIsRecording(false);
   }, []);
 
-  const recordEvent = useCallback((event) => {
-    if (isRecording) {
-      const newEvent = {
-        ...event,
-        timestamp: Date.now(),
-      };
-      saveEvents((prevEvents) => [...prevEvents, newEvent]);
-    }
-  }, [isRecording, saveEvents]);
+  const recordEvent = useCallback(
+    (event) => {
+      if (isRecording) {
+        const newEvent = {
+          ...event,
+          timestamp: Date.now(),
+        };
+        saveEvents((prevEvents) => [...prevEvents, newEvent]);
+      }
+    },
+    [isRecording, saveEvents]
+  );
 
-  const startReplay = useCallback((replayId) => {
-    const replay = events.find(event => event.id === replayId);
-    if (replay) {
-      setIsReplaying(true);
-      setCurrentReplay(replay);
-    }
-  }, [events]);
+  const startReplay = useCallback(
+    (replayId) => {
+      const replay = events.find((event) => event.id === replayId);
+      if (replay) {
+        setIsReplaying(true);
+        setCurrentReplay(replay);
+      }
+    },
+    [events]
+  );
 
   const stopReplay = useCallback(() => {
     setIsReplaying(false);
@@ -61,17 +73,19 @@ export const ReplayProvider = ({ children }) => {
   }, []);
 
   return (
-    <ReplayContext.Provider value={{
-      events,
-      isRecording,
-      isReplaying,
-      currentReplay,
-      startRecording,
-      stopRecording,
-      recordEvent,
-      startReplay,
-      stopReplay,
-    }}>
+    <ReplayContext.Provider
+      value={{
+        events,
+        isRecording,
+        isReplaying,
+        currentReplay,
+        startRecording,
+        stopRecording,
+        recordEvent,
+        startReplay,
+        stopReplay,
+      }}
+    >
       {children}
     </ReplayContext.Provider>
   );
