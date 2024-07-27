@@ -1,15 +1,29 @@
-import React, { useState } from 'react';
-import { useLoaderData, useFetcher } from '@remix-run/react';
-import { json } from '@remix-run/node';
-import { requireUserId } from '~/utils/auth.server';
-import { getBills, createBill } from '~/utils/bills.server';
-import BillList from '~/components/BillList';
-import SideDrawer from '~/components/SideDrawer';
-import AddBillForm from '~/components/AddBillForm';
+import React, { useState } from "react";
+import { useLoaderData, useFetcher } from "@remix-run/react";
+import { json } from "@remix-run/node";
+import { requireUserId } from "~/utils/auth.server";
+import { getBills, createBill } from "~/utils/bills.server";
+import BillList from "~/components/BillList";
+import SideDrawer from "~/components/SideDrawer";
+import AddBillForm from "~/components/AddBillForm";
 
 export const loader = async ({ request }) => {
   const userId = await requireUserId(request);
-  const bills = await getBills(userId);
+  const url = new URL(request.url);
+  const page = parseInt(url.searchParams.get("page") || "1", 10);
+  const limit = parseInt(url.searchParams.get("limit") || "10", 10);
+  const sortBy = url.searchParams.get("sortBy") || "dueDate";
+  const sortOrder = url.searchParams.get("sortOrder") || "asc";
+  const status = url.searchParams.get("status") || "all";
+
+  const bills = await getBills(userId, {
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+    status,
+  });
+
   return json({ bills });
 };
 
@@ -46,7 +60,11 @@ export default function BillsPage() {
         </button>
       </div>
       <BillList bills={bills} />
-      <SideDrawer isOpen={isDrawerOpen} onClose={handleCloseDrawer} title="Add Bill">
+      <SideDrawer
+        isOpen={isDrawerOpen}
+        onClose={handleCloseDrawer}
+        title="Add Bill"
+      >
         <AddBillForm onClose={handleCloseDrawer} />
       </SideDrawer>
     </div>
