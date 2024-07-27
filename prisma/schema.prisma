@@ -21,13 +21,13 @@ model User {
   xata_id           String             @unique(map: "User__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
   xata_version      Int                @default(0)
   xata_createdat    DateTime           @default(now()) @db.Timestamptz(6)
+  accounts          Account[]
   bills             Bill[]
   budgets           Budget[]
   connectedAccounts ConnectedAccount[]
   supportTickets    SupportTicket[]
   transactions      Transaction[]
   settings          UserSettings?
-  accounts          Account[] // New relationship
 }
 
 model UserSettings {
@@ -86,7 +86,6 @@ model Bill {
   name           String
   amount         Float
   dueDate        DateTime
-  paidDate       DateTime?
   category       String
   status         BillStatus
   recurring      Boolean        @default(false)
@@ -97,6 +96,7 @@ model Bill {
   xata_version   Int            @default(0)
   xata_createdat DateTime       @default(now()) @db.Timestamptz(6)
   xata_updatedat DateTime       @default(now()) @db.Timestamptz(6)
+  paidDate       DateTime?
   user           User           @relation(fields: [userId], references: [id])
 }
 
@@ -143,17 +143,20 @@ model FAQ {
   xata_createdat DateTime @default(now()) @db.Timestamptz(6)
 }
 
-// New Account model
 model Account {
-  id        String      @id @default(uuid())
-  userId    String
-  user      User        @relation(fields: [userId], references: [id])
-  name      String
-  type      AccountType
-  balance   Float
-  currency  String      @default("USD")
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id             String      @id @default(uuid())
+  userId         String
+  name           String
+  type           AccountType
+  balance        Float
+  currency       String      @default("USD")
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  xata_id        String      @unique(map: "Account__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
+  xata_version   Int         @default(0)
+  xata_createdat DateTime    @default(now()) @db.Timestamptz(6)
+  xata_updatedat DateTime    @default(now()) @db.Timestamptz(6)
+  user           User        @relation(fields: [userId], references: [id])
 }
 
 enum Theme {
@@ -196,7 +199,6 @@ enum TicketPriority {
   high
 }
 
-// New enum for Account type
 enum AccountType {
   checking
   savings
