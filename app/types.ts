@@ -107,3 +107,11 @@ export type DateRange = {
   start: Date;
   end: Date;
 };
+
+
+export type Metric = {
+  timestamp: string;
+  requestCount: number;
+  responseTime: number;
+  errorRate: number;
+};

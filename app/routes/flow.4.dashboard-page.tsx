@@ -15,7 +15,8 @@ import BudgetOverview from "~/components/BudgetOverview.v2";
 import TransactionList from "~/components/TransactionList";
 import { Play, Pause, RefreshCw } from "lucide-react";
 import BudgetDetailTable from "~/components/BudgetDetailTable";
-
+import { createSpan } from "~/utils/tracing.server";
+import { Metric } from "~/types";
 export const loader = async ({ request }) => {
   const userId = await requireUserId(request);
   const user = await getUser(userId);
@@ -23,13 +24,40 @@ export const loader = async ({ request }) => {
   const accountBalance = await getAccountBalance(userId);
   const budgetOverview = await getBudgetOverview(userId);
   const upcomingBills = await getUpcomingBills(userId);
-
+  const metrics = (await createSpan("fetch-metrics", async () => {
+    // In a real application, you would fetch this data from your OpenTelemetry backend
+    const mockMetrics = [
+      {
+        timestamp: "2024-07-26T00:00:00",
+        requestCount: 100,
+        responseTime: 250,
+        errorRate: 0.02,
+      },
+      {
+        timestamp: "2024-07-26T01:00:00",
+        requestCount: 120,
+        responseTime: 230,
+        errorRate: 0.01,
+      },
+      {
+        timestamp: "2024-07-26T02:00:00",
+        requestCount: 80,
+        responseTime: 280,
+        errorRate: 0.03,
+      },
+      // ... more data points
+    ];
+    return Promise.resolve({
+      metrics: mockMetrics,
+    });
+  })) as { metrics: Metric[] };
   return json({
     user,
     recentTransactions,
     accountBalance,
     budgetOverview,
     upcomingBills,
+    metrics: metrics.metrics,
   });
 };
 
@@ -40,7 +68,7 @@ export default function Dashboard() {
     accountBalance,
     budgetOverview,
     upcomingBills,
-  } = useLoaderData();
+  } = useLoaderData<typeof loader>();
 
   const {
     recordEvent,
