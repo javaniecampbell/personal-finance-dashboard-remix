@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useLoaderData, useFetcher } from "@remix-run/react";
 import { json, redirect } from "@remix-run/node";
-import { requireUserId } from "~/utils/auth.server";
+import { requireUserId } from "~/utils/auth.server.v2";
 import {
   getBudgets,
   createBudget,
@@ -23,6 +23,7 @@ export const action = async ({ request }) => {
   const formData = await request.formData();
   const action = formData.get("_action");
 
+  console.log("action", action);
   switch (action) {
     case "create": {
       const newBudget = {
@@ -70,7 +71,7 @@ const BudgetForm = ({ budget, onSubmit, onCancel }) => {
   );
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} method="POST" className="space-y-4">
       <div>
         <label
           htmlFor="name"
