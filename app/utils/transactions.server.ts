@@ -1,3 +1,4 @@
+import type { Account } from "~/types";
 import { db } from "./db.server";
 
 export async function getTransactions(userId: string, options: {
@@ -86,11 +87,74 @@ export async function getRecentTransactions(userId: string, limit: number) {
   });
 }
 
-export async function getAccountBalance(userId: string) {
+export async function getAccountBalance(userId: string): Promise<number> {
   const accounts = await db.account.findMany({
-    where: { userId },
-    select: { balance: true },
+    where: {
+      userId: userId,
+    },
+    select: {
+      balance: true,
+      type: true,
+    },
   });
 
-  return accounts.reduce((sum, account) => sum + account.balance, 0);
+  return accounts.reduce((total, account) => {
+    // Add balances from asset accounts (checking, savings, investment)
+    if (['checking', 'savings', 'investment'].includes(account.type)) {
+      return total + account.balance;
+    }
+    // Subtract balances from liability accounts (credit, loan)
+    else if (['credit', 'loan'].includes(account.type)) {
+      return total - account.balance;
+    }
+    return total;
+  }, 0);
+}
+
+export async function getAccountBalanceByType(userId: string): Promise<{ [key: string]: number }> {
+  const accounts = await db.account.findMany({
+    where: {
+      userId: userId,
+    },
+    select: {
+      balance: true,
+      type: true,
+    },
+  });
+
+  return accounts.reduce((acc, account) => {
+    if (!acc[account.type]) {
+      acc[account.type] = 0;
+    }
+    acc[account.type] += account.balance;
+    return acc;
+  }, {} as { [key: string]: number });
+}
+
+export async function getAccountBalanceByAccountId(userId: string, accountId: string): Promise<number> {
+  const account = await db.account.findUnique({
+    where: {
+      id: accountId,
+      userId: userId,
+    },
+    select: {
+      balance: true,
+    },
+  });
+
+  if (!account) {
+    throw new Error("Account not found");
+  }
+
+  return account.balance;
+}
+
+export async function getAllAccountBalances(userId: string): Promise<Account[]> {
+  const accounts = await db.account.findMany({
+    where: {
+      userId: userId,
+    },
+  });
+
+  return accounts;
 }
