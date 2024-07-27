@@ -14,6 +14,7 @@ import { UpcomingBills } from "~/components/DashboardComponents";
 import BudgetOverview from "~/components/BudgetOverview.v2";
 import TransactionList from "~/components/TransactionList";
 import { Play, Pause, RefreshCw } from "lucide-react";
+import BudgetDetailTable from "~/components/BudgetDetailTable";
 
 export const loader = async ({ request }) => {
   const userId = await requireUserId(request);
@@ -99,6 +100,10 @@ export default function Dashboard() {
 
               <UpcomingBills bills={upcomingBills} />
             </div>
+          </div>
+
+          <div className="my-6">
+            <BudgetDetailTable budgetOverview={budgetOverview} />
           </div>
 
           <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
