@@ -2,6 +2,49 @@ import type { Bill } from "~/types";
 import { db } from "./db.server";
 import { BillFrequency } from "@prisma/client";
 
+export async function getBills(
+  userId: string,
+  options: {
+    page?: number;
+    limit?: number;
+    sortBy?: keyof Bill;
+    sortOrder?: 'asc' | 'desc';
+    status?: 'paid' | 'unpaid' | 'all';
+  } = {}
+) {
+  const {
+    page = 1,
+    limit = 10,
+    sortBy = 'dueDate',
+    sortOrder = 'asc',
+    status = 'all'
+  } = options;
+
+  const skip = (page - 1) * limit;
+
+  const whereClause: any = { userId };
+  if (status !== 'all') {
+    whereClause.status = status;
+  }
+
+  const [bills, totalCount] = await Promise.all([
+    db.bill.findMany({
+      where: whereClause,
+      orderBy: { [sortBy]: sortOrder },
+      skip,
+      take: limit,
+    }),
+    db.bill.count({ where: whereClause }),
+  ]);
+
+  return {
+    bills,
+    totalCount,
+    page,
+    limit,
+    totalPages: Math.ceil(totalCount / limit),
+  };
+}
 export async function getUpcomingBills(userId: string) {
   const today = new Date();
   const thirtyDaysFromNow = new Date(today.setDate(today.getDate() + 30));
