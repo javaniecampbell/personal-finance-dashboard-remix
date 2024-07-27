@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, useActionData, useTransition, Link } from '@remix-run/react';
+import { Form, useActionData, useNavigation, Link } from '@remix-run/react';
 import { json, redirect } from '@remix-run/node';
 import { login, createUserSession } from '~/utils/auth.server';
 import { useNotification } from '~/components/ErrorNotification';
@@ -25,7 +25,7 @@ export const action = async ({ request }) => {
 
 export default function LoginPage() {
   const actionData = useActionData();
-  const transition = useTransition();
+  const transition = useNavigation();
   const { addNotification } = useNotification();
 
   const { values, errors, touched, handleChange, handleBlur, handleSubmit } = useFormState(
