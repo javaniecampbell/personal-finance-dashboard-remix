@@ -1,3 +1,4 @@
+import { FinancialHealthIndicators } from "~/types";
 import { db } from "./db.server";
 
 export async function getIncomeVsExpenses(userId: string, startDate: Date, endDate: Date) {
@@ -148,6 +149,47 @@ export async function getFinancialHealthIndicators(userId: string) {
     savingsRate: 1 - (totalExpenses._sum.amount || 0) / (totalIncome._sum.amount || 1),
     debtToIncomeRatio: await getDebtToIncomeRatio(userId),
     netWorth,
+  };
+}
+
+export async function getFinancialMetrics(userId: string): Promise<FinancialHealthIndicators> {
+  const totalIncome = await db.transaction.aggregate({
+    where: {
+      userId,
+      type: 'income',
+      date: { gte: new Date(new Date().setMonth(new Date().getMonth() - 1)) },
+    },
+    _sum: { amount: true },
+  });
+
+  const totalExpenses = await db.transaction.aggregate({
+    where: {
+      userId,
+      type: 'expense',
+      date: { gte: new Date(new Date().setMonth(new Date().getMonth() - 1)) },
+    },
+    _sum: { amount: true },
+  });
+
+  const totalAssets = await db.account.aggregate({
+    where: { userId, type: { in: ['checking', 'savings', 'investment'] } },
+    _sum: { balance: true },
+  });
+
+  const totalLiabilities = await db.account.aggregate({
+    where: { userId, type: { in: ['credit', 'loan'] } },
+    _sum: { balance: true },
+  });
+
+  const income = totalIncome._sum.amount || 0;
+  const expenses = totalExpenses._sum.amount || 0;
+  const assets = totalAssets._sum.balance || 0;
+  const liabilities = totalLiabilities._sum.balance || 0;
+
+  return {
+    savingsRate: income > 0 ? (income - expenses) / income : 0,
+    debtToIncomeRatio: income > 0 ? liabilities / income : 0,
+    netWorth: assets - liabilities,
   };
 }
 
