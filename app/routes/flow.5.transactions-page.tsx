@@ -10,7 +10,7 @@ import { useNotification } from "~/components/ErrorNotification";
 import FileUpload from "~/components/FileUpload";
 import SideDrawer from "~/components/SideDrawer";
 import { formatDate, formatCurrency } from "~/utils/formatters";
-import { Filter, SortAsc, SortDesc, FileUp, Info } from "lucide-react";
+import { Filter, SortAsc, SortDesc, FileUp, Info, Plus } from "lucide-react";
 import AddTransactionForm from "~/components/AddTransactionForm";
 
 export const loader = async ({ request }) => {
@@ -116,9 +116,25 @@ export default function TransactionsPage() {
     setSelectedTransaction(transaction);
     setIsDrawerOpen(true);
   };
-  const handleAddTransaction = () => {
+  const openAddTransaction = () => {
     setIsAddingTransaction(true);
     setIsDrawerOpen(true);
+  };
+  const handleAddTransaction = async (transactionData) => {
+    try {
+      const result = await fetcher.submit(
+        { ...transactionData, _action: "createTransaction" },
+        { method: "post" }
+      );
+      if (result.success) {
+        addNotification("Transaction added successfully", "success");
+        setIsAddFormOpen(false);
+      } else {
+        addNotification(result.error, "error");
+      }
+    } catch (error) {
+      addNotification("Failed to add transaction", "error");
+    }
   };
 
   const handleCloseDrawer = () => {
@@ -143,18 +159,19 @@ export default function TransactionsPage() {
           </select>
         </div>
         <div className="flex justify-between gap-2">
-          <button
-            onClick={handleAddTransaction}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Add Transaction
-          </button>
           <FileUpload onFileUpload={handleFileUpload} accept=".csv,.xls,.xlsx">
             <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded inline-flex items-center">
               <FileUp className="mr-2" />
               Import Transactions
             </button>
           </FileUpload>
+          <button
+            onClick={openAddTransaction}
+           className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded inline-flex items-center"
+          >
+             <Plus className="mr-2" />
+            Add Transaction
+          </button>
         </div>
       </div>
 
