@@ -58,7 +58,7 @@ export async function getBudgetPerformance(userId: string) {
     name: budget.name,
     category: budget.category,
     budgetedAmount: budget.amount,
-    actualAmount: budget.transactions.reduce((sum, transaction) => sum + transaction.amount, 0),
+    actualAmount: budget?.transactions?.reduce((sum, transaction) => sum + transaction.amount, 0),
   }));
 }
 
