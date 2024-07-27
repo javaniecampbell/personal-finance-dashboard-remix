@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form, useActionData, useNavigation, Link } from '@remix-run/react';
 import { json, redirect } from '@remix-run/node';
-import { login, createUserSession } from '~/utils/auth.server';
+import { login, createUserSession } from '~/utils/auth.server.v2';
 import { useNotification } from '~/components/ErrorNotification';
 import { useFormState } from '~/hooks/useFormState';
 
@@ -9,7 +9,7 @@ export const action = async ({ request }) => {
   const form = await request.formData();
   const email = form.get('email');
   const password = form.get('password');
-  const redirectTo = form.get('redirectTo') || '/dashboard';
+  const redirectTo = form.get('redirectTo') || '/flow/4/dashboard-page' || '/dashboard';
 
   if (!email || !password) {
     return json({ errors: { email: 'Email is required', password: 'Password is required' } }, { status: 400 });
