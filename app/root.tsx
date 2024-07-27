@@ -10,7 +10,7 @@ import "./styles/tailwind.css";
 import { MetaFunction } from "@remix-run/node";
 import { ReplayProvider } from "~/components/ReplaySystem";
 import { NotificationProvider } from "~/components/ErrorNotification";
-
+import ErrorBoundary from "~/components/ErrorBoundary";
 export const meta: MetaFunction = () => [
   { charset: "utf-8" },
   {
@@ -45,10 +45,12 @@ export function Layout({ children }: { children: Readonly<React.ReactNode> }) {
 
 export default function App() {
   return (
-    <NotificationProvider>
-      <ReplayProvider>
-        <Outlet />
-      </ReplayProvider>
-    </NotificationProvider>
+    <ErrorBoundary>
+      <NotificationProvider>
+        <ReplayProvider>
+          <Outlet />
+        </ReplayProvider>
+      </NotificationProvider>
+    </ErrorBoundary>
   );
 }
