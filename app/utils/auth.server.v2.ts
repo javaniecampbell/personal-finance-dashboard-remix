@@ -1,11 +1,52 @@
 import { createCookieSessionStorage, redirect } from "@remix-run/node";
 import bcrypt from "bcryptjs";
 import { db } from "./db.server";
+import type { User } from "~/types";
 
 type LoginForm = {
   email: string;
   password: string;
 };
+
+
+export async function createUser(userData: {
+  email: string;
+  password: string;
+  name?: string;
+  phone?: string;
+  address?: string;
+  dateOfBirth?: Date;
+}): Promise<User> {
+  const passwordHash = await bcrypt.hash(userData.password, 10); //TODO: This hash might not be secure enough
+
+  const user = await db.user.findUnique({ where: { email: userData.email } });
+  if (user) throw new Error("A user with this email already");
+
+  const createUserCommand = {
+    email: userData.email,
+    name: userData.name,
+    phone: userData.phone,
+    address: userData.address,
+    dateOfBirth: userData.dateOfBirth,
+  }
+
+
+  return db.user.create({
+    data: {
+      ...createUserCommand,
+      passwordHash,
+    },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      phone: true,
+      address: true,
+      dateOfBirth: true,
+    },
+  });
+}
+
 
 export async function login({ email, password }: LoginForm) {
   const user = await db.user.findUnique({ where: { email } });
