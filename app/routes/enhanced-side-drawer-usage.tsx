@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Outlet } from '@remix-run/react';
-import Layout from '~/components/Layout';
-import NestedNavigation from '~/components/NestedNavigation';
-import SideDrawer from '~/components/SideDrawer.v3.enhanced';
+import { ReactNode, useState } from "react";
+import { Outlet } from "@remix-run/react";
+import Layout from "~/components/Layout";
+import NestedNavigation from "~/components/NestedNavigation";
+import SideDrawer from "~/components/SideDrawer.v3.enhanced";
 
 const navigationItems = [
   // ... (same as before)
@@ -25,15 +25,15 @@ const MainDrawerContent = ({ pushPage }) => (
   <div>
     <h3 className="text-lg font-semibold mb-4">Main Drawer Content</h3>
     <button
-      onClick={() => pushPage(<DetailDrawerContent pushPage={pushPage} />, "Detail View")}
+      onClick={() =>
+        pushPage(<DetailDrawerContent pushPage={pushPage} />, "Detail View")
+      }
       className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
     >
       View Details
     </button>
   </div>
 );
-
-
 
 const NestedDrawerContent = () => (
   <div>
@@ -44,10 +44,50 @@ const NestedDrawerContent = () => (
 
 export default function DashboardLayout() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [currentDrawerContent, setCurrentDrawerContent] =
+    useState<ReactNode>(null);
 
   const openDrawer = () => {
     setIsDrawerOpen(true);
   };
+  // The pushPage function allows you to add new pages to the drawer, while the popPage function (triggered by the back button) allows you to go back to the previous page. The current page is determined by the last item in the pageStack array.
+
+  const pushPage = (newContent, newTitle) => {
+    setPageStack((prevStack) => [
+      ...prevStack,
+      { content: newContent, title: newTitle },
+    ]);
+    setCurrentDrawerContent(newContent);
+    setIsDrawerOpen(true);
+  };
+
+  const popPage = () => {
+    if (pageStack.length > 1) {
+      setPageStack((prevStack) => prevStack.slice(0, -1));
+      setCurrentDrawerContent(pageStack[pageStack.length - 2].content);
+    } else {
+      setIsDrawerOpen(false);
+    }
+  };
+
+  const [pageStack, setPageStack] = useState([
+    {
+      content: <MainDrawerContent pushPage={pushPage} />,
+      title: "Main Drawer",
+    },
+  ]);
+
+  // const currentPage = pageStack[pageStack.length - 1];
+  // useEffect(() => {
+  //   if (isDrawerOpen) {
+  //     setCurrentDrawerContent(pageStack[pageStack.length - 1].content);
+  //   }
+  // }, [isDrawerOpen, pageStack]);
+
+  // useEffect(() => {
+
+  //   currentDrawerContent =
+  // }, []);
 
   return (
     <Layout>
@@ -67,7 +107,7 @@ export default function DashboardLayout() {
       <SideDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        initialContent={<MainDrawerContent />}
+        initialContent={currentDrawerContent}
         title="Main Drawer"
       />
     </Layout>
