@@ -61,3 +61,14 @@ export async function getBudgetPerformance(userId: string) {
     actualAmount: budget.transactions.reduce((sum, transaction) => sum + transaction.amount, 0),
   }));
 }
+
+
+export async function getBudgetOverview(userId: string) {
+  const budgets = await getBudgets(userId);
+  const performance = await getBudgetPerformance(userId);
+
+  return {
+    budgets,
+    performance,
+  };
+}
