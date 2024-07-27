@@ -1,4 +1,4 @@
-import type { Account } from "~/types";
+import type { Account, Transaction } from "~/types";
 import { db } from "./db.server";
 
 export async function getTransactions(userId: string, options: {
@@ -79,7 +79,7 @@ export async function importTransactions(userId: string, transactions: Array<{
 }
 
 
-export async function getRecentTransactions(userId: string, limit: number) {
+export async function getRecentTransactions(userId: string, limit: number = 5): Promise<Transaction[]> {
   return db.transaction.findMany({
     where: { userId },
     orderBy: { date: 'desc' },
