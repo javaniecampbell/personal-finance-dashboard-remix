@@ -64,6 +64,35 @@ export async function getBudgetPerformance(userId: string) {
   })) satisfies BudgetPerformance[];
 }
 
+// app/utils/budgets.server.ts
+/**
+ * Budget Performance:
+ * Categories allow us to compare actual spending against budgeted amounts
+ * @param userId 
+ * @param month 
+ * @returns 
+ */
+export async function getBudgetPerformanceByMonth(userId: string, month: Date) {
+  const budgets = await db.budget.findMany({
+    where: { userId },
+    include: {
+      transactions: {
+        where: {
+          date: {
+            gte: startOfMonth(month),
+            lt: endOfMonth(month)
+          }
+        }
+      }
+    }
+  });
+
+  return budgets.map(budget => ({
+    category: budget.category,
+    budgeted: budget.amount,
+    spent: budget.transactions.reduce((sum, t) => sum + t.amount, 0)
+  }));
+}
 
 export async function getBudgetOverview(userId: string): Promise<{ budgets: Budget[], performance: BudgetPerformance[] }> {
   const budgets = await getBudgets(userId);
@@ -71,6 +100,6 @@ export async function getBudgetOverview(userId: string): Promise<{ budgets: Budg
 
   return {
     budgets,
-    performance ,
+    performance,
   };
 }
