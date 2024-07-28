@@ -150,7 +150,7 @@ export default function Dashboard() {
           </div>
 
           <div className="my-6">
-            <BudgetDetailTable budgetOverview={budgetOverview} />
+            <BudgetDetailTable budgetOverview={budgetOverview} isChangeRate />
           </div>
 
           <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
