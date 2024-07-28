@@ -1,10 +1,11 @@
 import React from "react";
 import { startOfMonth, endOfMonth } from "date-fns";
+import { DateRangeResult } from "~/types";
 
 type DateRangePickerProps = {
   startDate: Date;
   endDate: Date;
-  onChange: (dateRange: { startDate: Date; endDate: Date }) => void;
+  onChange: (dateRange: DateRangeResult) => void;
 };
 
 export const DateRangePicker: React.FC<DateRangePickerProps> = ({
