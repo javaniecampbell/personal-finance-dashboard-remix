@@ -11,9 +11,11 @@ type BudgetOverviewProps = {
 const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgetOverview }) => {
   const { budgets, performance } = budgetOverview;
 
-  const totalBudgeted = budgets.reduce((sum, budget) => sum + budget.amount, 0);
+  const totalBudgeted = performance.reduce((sum, perf) => sum + perf.budgetedAmount, 0);
   const totalActual = performance.reduce((sum, perf) => sum + perf.actualAmount, 0);
   const totalPlanned = performance.reduce((sum, perf) => sum + perf.budgetedAmount, 0);
+
+  // console.log('Performance', performance);
 
   const overallPerformance = totalPlanned > 0 ? totalActual / totalPlanned : 0;
   const remainingBudget = totalBudgeted - totalActual;
