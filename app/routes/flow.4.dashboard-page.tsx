@@ -1,23 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { useLoaderData, Link } from "@remix-run/react";
-import { json } from "@remix-run/node";
-import { requireUserId } from "~/utils/auth.server.v2";
-import { getUser } from "~/utils/user.server";
-import {
-  getRecentTransactions,
-  getAccountBalance,
-} from "~/utils/transactions.server";
-import { getBudgetOverview } from "~/utils/budgets.server";
-import { getUpcomingBills } from "~/utils/bills.server";
-import { useReplay } from "~/hooks/useReplay";
-import { UpcomingBills } from "~/components/DashboardComponents";
-import BudgetOverview from "~/components/BudgetOverview.v2";
-import TransactionList from "~/components/TransactionList";
-import { Play, Pause, RefreshCw } from "lucide-react";
+import { ActionFunctionArgs, json, LoaderFunctionArgs } from "@remix-run/node";
+import { Link, useLoaderData } from "@remix-run/react";
+import { Pause, Play, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import BudgetDetailTable from "~/components/BudgetDetailTable";
-import { createSpan } from "~/utils/tracing.server";
+import BudgetOverview from "~/components/BudgetOverview.v2";
+import { UpcomingBills } from "~/components/DashboardComponents";
+import UpdateTransactionsDrawer from "~/components/UpdateTransactionsDrawer";
+import TransactionList from "~/components/TransactionList";
+import { useReplay } from "~/hooks/useReplay";
 import { Metric } from "~/types";
-export const loader = async ({ request }) => {
+import { requireUserId } from "~/utils/auth.server.v2";
+import { getUpcomingBills } from "~/utils/bills.server";
+import { getBudgetOverview } from "~/utils/budgets.server";
+import { createSpan } from "~/utils/tracing.server";
+import {
+  getAccountBalance,
+  getRecentTransactions,
+  updateTransactionsBudgets,
+} from "~/utils/transactions.server";
+import { getUser } from "~/utils/user.server";
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userId = await requireUserId(request);
   const user = await getUser(userId);
   const recentTransactions = await getRecentTransactions(userId, 5);
@@ -61,6 +63,19 @@ export const loader = async ({ request }) => {
   });
 };
 
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const userId = await requireUserId(request);
+  const formData = await request.formData();
+  const _action = formData.get("_action");
+
+  if (_action === "updateTransactionsBudgets") {
+    const result = await updateTransactionsBudgets(userId);
+    return json(result);
+  }
+
+  // ... other actions ...
+};
+
 export default function Dashboard() {
   const {
     user,
@@ -78,6 +93,7 @@ export default function Dashboard() {
     currentReplayEvent,
   } = useReplay();
   const [balance, setBalance] = useState(accountBalance);
+  const [isUpdateDrawerOpen, setIsUpdateDrawerOpen] = useState(false);
 
   useEffect(() => {
     recentTransactions.forEach(recordEvent);
@@ -194,36 +210,51 @@ export default function Dashboard() {
                 <h2 className="text-lg font-medium text-gray-900 mb-4">
                   Quick Actions
                 </h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <Link
-                    to="/transactions/new"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Add Transaction
-                  </Link>
-                  <Link
-                    to="/budgets"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  >
-                    Manage Budgets
-                  </Link>
-                  <Link
-                    to="/bills/pay"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                  >
-                    Pay Bills
-                  </Link>
-                  <Link
-                    to="/analytics"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                  >
-                    View Analytics
-                  </Link>
+                <div className="gid grid-rows-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <Link
+                      to="/transactions/new"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Add Transaction
+                    </Link>
+                    <Link
+                      to="/budgets"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    >
+                      Manage Budgets
+                    </Link>
+                    <Link
+                      to="/bills/pay"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                    >
+                      Pay Bills
+                    </Link>
+                    <Link
+                      to="/analytics"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    >
+                      View Analytics
+                    </Link>
+                  </div>
+                  <div className="mt-4 grid">
+                    <button
+                      onClick={() => setIsUpdateDrawerOpen(true)}
+                      className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+                    >
+                      Update Transactions Budgets
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
             {/* You can add another component here, such as financial tips or goal progress */}
           </div>
+
+          <UpdateTransactionsDrawer
+            isOpen={isUpdateDrawerOpen}
+            onClose={() => setIsUpdateDrawerOpen(false)}
+          />
         </div>
       </main>
     </div>
