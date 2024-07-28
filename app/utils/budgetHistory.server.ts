@@ -1,3 +1,5 @@
+
+import { db } from "./db.server";
 import { startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 
 export async function getBudgetHistory(userId: string, startDate: Date, endDate: Date) {
