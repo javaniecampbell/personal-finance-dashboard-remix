@@ -187,3 +187,8 @@ export type RecordBudgetHistoryResult = {
   recordedEntries: number;
   totalBudgets: number;
 };
+
+export type DateRangeResult = {
+  startDate: Date;
+  endDate: Date;
+};
