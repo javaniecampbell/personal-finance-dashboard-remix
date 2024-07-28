@@ -24,6 +24,8 @@ const BudgetHistoryChart: React.FC<BudgetHistoryChartProps> = ({
     Performance: h.performance,
   }));
 
+  console.log("Budget History received by simple view chart:", budgetHistory);
+  console.log("Processed Simple Chart Data:", data);
   if (data.length === 0) {
     return (
       <div className="mt-8">
@@ -34,8 +36,6 @@ const BudgetHistoryChart: React.FC<BudgetHistoryChartProps> = ({
       </div>
     );
   }
-
-  
 
   return (
     <div className="mt-8">
