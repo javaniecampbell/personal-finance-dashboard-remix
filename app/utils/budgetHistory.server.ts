@@ -60,8 +60,18 @@ export async function recordBudgetHistory(userId: string, date: Date = new Date(
   });
 
   const historyEntries = budgets.map(budget => {
-    const actualAmount = budget.transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-    const performance = budget.amount > 0 ? ((actualAmount - budget.amount) / budget.amount) * 100 : 0;
+    // Actual amount is the sum of all transactions in the period is currently coming back as 0, this is incorrect
+    // const actualAmount = budget.transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+
+    // Fix the actual amount calculation summing only expenses
+    const actualAmount = budget.transactions.reduce((sum, transaction) => {
+      // Only sum expenses (negative amounts) for budget tracking
+      return transaction.amount < 0 ? sum + Math.abs(transaction.amount) : sum;
+    }, 0);
+    const performance = budget.amount > 0 ? ((actualAmount - budget.amount) / budget.amount) * 100 : 0; //This calculation gives the percentage over or under budget.
+  
+
+
 
     return {
       budgetId: budget.id,
