@@ -18,6 +18,16 @@ type DetailedBudgetHistoryChartProps = {
 const DetailedBudgetHistoryChart: React.FC<DetailedBudgetHistoryChartProps> = ({
   budgetHistory,
 }) => {
+  if (!budgetHistory?.history || budgetHistory.history.length === 0) {
+    return (
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">
+          {budgetHistory.name} - Detailed Historical Performance
+        </h3>
+        <div>No budget history data available for the selected period.</div>
+      </div>
+    );
+  }
   const data = budgetHistory.history.map((h) => ({
     date: new Date(h.date).toISOString().split("T")[0],
     "Budgeted Amount": h.budgetedAmount,
@@ -40,16 +50,6 @@ const DetailedBudgetHistoryChart: React.FC<DetailedBudgetHistoryChartProps> = ({
   console.log("Budget History Data received by detail chart:", budgetHistory);
   console.log("Processed Detailed Chart Data:", data);
 
-  if (data.length === 0) {
-    return (
-      <div className="mt-8">
-        <h3 className="text-xl font-semibold mb-4">
-          {budgetHistory.name} - Detailed Historical Performance
-        </h3>
-        <div>No budget history data available for the selected period.</div>
-      </div>
-    );
-  }
   return (
     <div className="mt-8">
       <h3 className="text-xl font-semibold mb-4">
