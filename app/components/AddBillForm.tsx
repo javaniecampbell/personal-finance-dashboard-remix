@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, useActionData } from "@remix-run/react";
+import { Form } from "@remix-run/react";
 import { useFormState } from "~/hooks/useFormState";
 import type { Bill } from "~/types";
 import { BILL_CATEGORIES } from "~/constants/categories";
@@ -7,7 +7,6 @@ const AddBillForm: React.FC<{
   onSubmit: (billData: Bill) => void;
   onClose: () => void;
 }> = ({ onSubmit, onClose }) => {
-  const actionData = useActionData();
   const { values, handleChange, handleSubmit, errors } = useFormState({
     name: "",
     amount: "",
