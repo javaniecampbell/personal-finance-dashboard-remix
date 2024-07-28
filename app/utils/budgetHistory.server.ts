@@ -69,7 +69,7 @@ export async function recordBudgetHistory(userId: string, date: Date = new Date(
       return transaction.amount < 0 ? sum + Math.abs(transaction.amount) : sum;
     }, 0);
     const performance = budget.amount > 0 ? ((actualAmount - budget.amount) / budget.amount) * 100 : 0; //This calculation gives the percentage over or under budget.
-  
+    const spentPercentage = budget.amount > 0 ? (actualAmount / budget.amount) * 100 : 0; // This calculation gives the percentage of the budget that has been spent.
 
 
 
@@ -79,6 +79,7 @@ export async function recordBudgetHistory(userId: string, date: Date = new Date(
       budgetedAmount: budget.amount,
       actualAmount,
       performance,
+      spentPercentage,
     };
   });
 
