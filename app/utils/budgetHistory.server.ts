@@ -1,4 +1,5 @@
 
+import { RecordBudgetHistoryResult } from "~/types";
 import { db } from "./db.server";
 import { startOfMonth, endOfMonth, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns';
 
@@ -41,9 +42,9 @@ export async function getBudgetHistory(userId: string, startDate: Date, endDate:
   });
 }
 
-export async function recordBudgetHistory(userId: string, date: Date = new Date()) {
-  const startOfPeriod = startOfDay(date);
-  const endOfPeriod = endOfDay(date);
+export async function recordBudgetHistory(userId: string, date: Date = new Date()): Promise<RecordBudgetHistoryResult> {
+  const startOfPeriod = startOfMonth(date);
+  const endOfPeriod = endOfMonth(date);
 
   const budgets = await db.budget.findMany({
     where: { userId },
@@ -63,19 +64,27 @@ export async function recordBudgetHistory(userId: string, date: Date = new Date(
     // Actual amount is the sum of all transactions in the period is currently coming back as 0, this is incorrect
     // const actualAmount = budget.transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
 
-    // Fix the actual amount calculation summing only expenses
+    // Fix the actual amount calculation summing only expenses if the amount is negative
+    // const actualAmount = budget.transactions.reduce((sum, transaction) => {
+    //   // Only sum expenses (negative amounts) for budget tracking
+    //   return transaction.amount < 0 ? sum + Math.abs(transaction.amount) : sum;
+    // }, 0);
+
+    // Fix the actual amount calculation summing only expenses based on the transaction type
     const actualAmount = budget.transactions.reduce((sum, transaction) => {
-      // Only sum expenses (negative amounts) for budget tracking
-      return transaction.amount < 0 ? sum + Math.abs(transaction.amount) : sum;
+      // Only sum expenses for budget tracking
+      return transaction.type === 'expense' ? sum + transaction.amount : sum;
     }, 0);
     const performance = budget.amount > 0 ? ((actualAmount - budget.amount) / budget.amount) * 100 : 0; //This calculation gives the percentage over or under budget.
     const spentPercentage = budget.amount > 0 ? (actualAmount / budget.amount) * 100 : 0; // This calculation gives the percentage of the budget that has been spent.
-
+    if (process.env.NODE_ENV === 'development') {
+      console.log('acutalAmount', actualAmount);
+    }
 
 
     return {
       budgetId: budget.id,
-      date: startOfPeriod,
+      date: endOfPeriod, // We're recording for the entire month
       budgetedAmount: budget.amount,
       actualAmount,
       performance,
