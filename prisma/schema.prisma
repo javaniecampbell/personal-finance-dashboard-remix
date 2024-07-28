@@ -93,7 +93,7 @@ model Budget {
   xata_createdat DateTime        @default(now()) @db.Timestamptz(6)
   xata_updatedat DateTime        @default(now()) @db.Timestamptz(6)
   user           User            @relation(fields: [userId], references: [id])
-  BudgetHistory  BudgetHistory[]
+  history        BudgetHistory[]
   transactions   Transaction[]
 }
 
