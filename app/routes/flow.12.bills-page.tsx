@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLoaderData, useFetcher } from "@remix-run/react";
 import { ActionFunctionArgs, json, LoaderFunctionArgs } from "@remix-run/node";
 import { requireUserId } from "~/utils/auth.server.v2";
@@ -91,24 +91,30 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 };
 
-export default async function BillsPage() {
-  const { bills } = await useLoaderData<typeof loader>();
+export default function BillsPage() {
+  const { bills } = useLoaderData<typeof loader>();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
   const { addNotification } = useNotification();
+  const [billList, setBillList] = useState<Bill[] | null>(null);
   const fetcher = useFetcher();
-  const billList = bills.bills.map((bill) => {
-    return {
-      id: bill.id,
-      name: bill.name,
-      amount: bill.amount,
-      dueDate: new Date(bill.dueDate),
-      category: bill.category,
-      status: bill.status,
-      recurring: bill.recurring,
-      frequency: bill.frequency,
-    } as Bill;
-  });
+
+  useEffect(() => {
+    const list = bills?.bills?.map((bill) => {
+      return {
+        id: bill.id,
+        name: bill.name,
+        amount: bill.amount,
+        dueDate: new Date(bill.dueDate),
+        category: bill.category,
+        status: bill.status,
+        recurring: bill.recurring,
+        frequency: bill.frequency,
+      } as Bill;
+    });
+
+    setBillList(list);
+  }, [bills]);
 
   const openAddBill = () => {
     setEditingBill(null);
@@ -140,12 +146,9 @@ export default async function BillsPage() {
     setIsDrawerOpen(true);
   };
 
-  const handleUpdateBill = async (updatedBill: Bill) => {
+  const handleUpdateBill = (updatedBill: Bill) => {
     try {
-      await fetcher.submit(
-        { ...updatedBill, _action: "update" },
-        { method: "post" }
-      );
+      fetcher.submit({ ...updatedBill, _action: "update" }, { method: "post" });
       setEditingBill(null);
     } catch (error) {
       console.error("Failed to update bill:", error);
@@ -174,31 +177,28 @@ export default async function BillsPage() {
           Add Bill
         </button>
       </div>
-      <BillList
-        bills={billList}
-        onEditBill={handleEditBill}
-        onDeleteBill={handleDeleteBill}
-      />
+      {billList && (
+        <BillList
+          bills={billList}
+          onEditBill={handleEditBill}
+          onDeleteBill={handleDeleteBill}
+        />
+      )}
+
       <SideDrawer
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
-        title="Add Bill"
+        title={editingBill !== null ? "Edit Bill" : "Add Bill"}
       >
-        <SideDrawer
-          isOpen={isDrawerOpen}
-          onClose={handleCloseDrawer}
-          title={editingBill ? "Edit Bill" : "Add Bill"}
-        >
-          {editingBill ? (
-            <EditBillForm
-              bill={editingBill}
-              onSubmit={handleUpdateBill}
-              onClose={handleCloseDrawer}
-            />
-          ) : (
-            <AddBillForm onSubmit={handleAddBill} onClose={handleCloseDrawer} />
-          )}
-        </SideDrawer>
+        {editingBill !== null ? (
+          <EditBillForm
+            bill={editingBill}
+            onSubmit={handleUpdateBill}
+            onClose={handleCloseDrawer}
+          />
+        ) : (
+          <AddBillForm onSubmit={handleAddBill} onClose={handleCloseDrawer} />
+        )}
       </SideDrawer>
     </div>
   );
