@@ -37,8 +37,8 @@ const DetailedBudgetHistoryChart: React.FC<DetailedBudgetHistoryChartProps> = ({
       )
     )
   );
-  console.log("Budget History Data:", budgetHistory);
-  console.log("Processed Chart Data:", data);
+  console.log("Budget History Data received by detail chart:", budgetHistory);
+  console.log("Processed Detailed Chart Data:", data);
 
   if (data.length === 0) {
     return (
