@@ -115,3 +115,46 @@ export type Metric = {
   responseTime: number;
   errorRate: number;
 };
+
+export type UserBudget = {
+  id: string;
+  name: string;
+  amount: number;
+  category: string;
+  userId: string;
+};
+
+
+export type BudgetHistoryEntry = {
+  id: string;
+  budgetId: string;
+  date: string; // ISO date string
+  budgetedAmount: number;
+  actualAmount: number;
+  performance: number;
+  spentPercentage: number;
+};
+
+export type BudgetHistory = {
+  id: string;
+  name: string;
+  category: string;
+  history: BudgetHistoryEntry[];
+};
+
+export type BudgetOverview = {
+  budgets: Budget[];
+  performance: BudgetPerformance[];
+};
+
+// For the dashboard loader
+export type DashboardData = {
+  budgetOverview: BudgetOverview;
+  budgetHistory: BudgetHistory[];
+};
+
+// For the recordBudgetHistory function result
+export type RecordBudgetHistoryResult = {
+  recordedEntries: number;
+  totalBudgets: number;
+};
