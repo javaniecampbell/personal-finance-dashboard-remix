@@ -36,6 +36,7 @@ export async function getBudgetHistory(userId: string, startDate: Date, endDate:
           budgetedAmount: historyEntry?.budgetedAmount || budget.amount,
           actualAmount: historyEntry?.actualAmount || 0,
           performance: historyEntry?.performance || 0,
+          spentPercentage: historyEntry?.spentPercentage || 0,
         };
       }),
     };
