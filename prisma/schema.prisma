@@ -67,14 +67,19 @@ model Transaction {
 }
 
 model BudgetHistory {
-  id             String   @id @default(uuid())
-  budgetId       String
-  date           DateTime
-  budgetedAmount Float
-  actualAmount   Float
-  performance    Float
-  createdAt      DateTime @default(now())
-  budget         Budget   @relation(fields: [budgetId], references: [id])
+  id              String   @id @default(uuid())
+  budgetId        String
+  date            DateTime
+  budgetedAmount  Float
+  actualAmount    Float
+  performance     Float // Percentage over/under budget
+  spentPercentage Float // Percentage of budget spent
+  createdAt       DateTime @default(now())
+  xata_id         String   @unique(map: "BudgetHistory__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
+  xata_version    Int      @default(0)
+  xata_createdat  DateTime @default(now()) @db.Timestamptz(6)
+  xata_updatedat  DateTime @default(now()) @db.Timestamptz(6)
+  budget          Budget   @relation(fields: [budgetId], references: [id])
 
   @@index([budgetId, date])
 }
