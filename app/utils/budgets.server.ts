@@ -64,7 +64,20 @@ export async function getBudgetPerformance(userId: string, isCapped: boolean = f
   }
 
   return budgets.map(budget => {
-    const actualAmount = budget?.transactions?.reduce((sum, transaction) => sum + transaction.amount, 0);
+    // Actual amount is the sum of all transactions in the period
+    // const actualAmount = budget?.transactions?.reduce((sum, transaction) => sum + transaction.amount, 0);
+
+    // Fix the actual amount calculation summing only expenses if the amount is negative
+    // const actualAmount = budget.transactions.reduce((sum, transaction) => {
+    //   // Only sum expenses (negative amounts) for budget tracking
+    //   return transaction.amount < 0 ? sum + Math.abs(transaction.amount) : sum;
+    // }, 0);
+
+    // Actual Fix for the actual amount calculation summing only expenses based on the transaction type
+
+    const actualAmount = budget.transactions.reduce((sum, transaction) => {
+      return transaction.type === 'expense' ? sum + transaction.amount : sum;
+    }, 0);
     if (process.env.NODE_ENV === 'development') {
       console.log(`Budget ${budget.name}: Actual amount = ${actualAmount}`);
 
