@@ -1,7 +1,7 @@
 
 import { BudgetHistory, RecordBudgetHistoryResult } from "~/types";
 import { db } from "./db.server";
-import { startOfMonth, endOfMonth, eachDayOfInterval, startOfDay, endOfDay, eachMonthOfInterval } from 'date-fns';
+import { startOfMonth, endOfMonth, eachDayOfInterval, startOfDay, endOfDay, eachMonthOfInterval, isValid } from 'date-fns';
 
 export async function getBudgetHistory(userId: string, startDate: Date, endDate: Date) {
   const budgets = await db.budget.findMany({
@@ -43,15 +43,26 @@ export async function getBudgetHistory(userId: string, startDate: Date, endDate:
   });
 }
 
-export async function getBudgetHistoryByMonth(userId: string, startDate: Date, endDate: Date): Promise<BudgetHistory[]> {
+export async function getBudgetHistoryByMonth(userId: string, startDate: Date, endDate: Date) {
+  // Validate input dates
+  if (!isValid(startDate) || !isValid(endDate)) {
+    throw new Error('Invalid date range provided');
+  }
+  const start = startOfMonth(startDate);
+  const end = endOfMonth(endDate);
+
+  if (start > end) {
+    throw new Error('Start date must be before end date');
+  }
+
   const budgets = await db.budget.findMany({
     where: { userId },
     include: {
       transactions: {
         where: {
           date: {
-            gte: startOfMonth(startDate),
-            lte: endOfMonth(endDate),
+            gte: start,
+            lte: end,
           },
         },
       },
