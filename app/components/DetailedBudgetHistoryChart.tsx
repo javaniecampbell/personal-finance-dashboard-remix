@@ -19,7 +19,7 @@ const DetailedBudgetHistoryChart: React.FC<DetailedBudgetHistoryChartProps> = ({
   budgetHistory,
 }) => {
   const data = budgetHistory.history.map((h) => ({
-    date: new Date(h.date).toISOString().split('T')[0],
+    date: new Date(h.date).toISOString().split("T")[0],
     "Budgeted Amount": h.budgetedAmount,
     "Actual Amount": h.actualAmount,
     Performance: h.performance,
@@ -37,8 +37,19 @@ const DetailedBudgetHistoryChart: React.FC<DetailedBudgetHistoryChartProps> = ({
       )
     )
   );
-  console.log('Budget History Data:', budgetHistory);
-  console.log('Processed Chart Data:', data);
+  console.log("Budget History Data:", budgetHistory);
+  console.log("Processed Chart Data:", data);
+
+  if (data.length === 0) {
+    return (
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">
+          {budgetHistory.name} - Detailed Historical Performance
+        </h3>
+        <div>No budget history data available for the selected period.</div>
+      </div>
+    );
+  }
   return (
     <div className="mt-8">
       <h3 className="text-xl font-semibold mb-4">
