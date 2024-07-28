@@ -8,7 +8,7 @@ import { UpcomingBills } from "~/components/DashboardComponents";
 import UpdateTransactionsDrawer from "~/components/UpdateTransactionsDrawer";
 import TransactionList from "~/components/TransactionList";
 import { useReplay } from "~/hooks/useReplay";
-import { Metric } from "~/types";
+import { DateRangeResult, Metric } from "~/types";
 import { requireUserId } from "~/utils/auth.server.v2";
 import { getUpcomingBills } from "~/utils/bills.server";
 import { getBudgetOverview } from "~/utils/budgets.server";
@@ -23,6 +23,7 @@ import BudgetHistoryChart from "~/components/BudgetHistoryChart";
 import { startOfMonth, endOfMonth, subMonths } from "date-fns";
 import {
   getBudgetHistory,
+  getBudgetHistoryByMonth,
   recordBudgetHistory,
 } from "~/utils/budgetHistory.server";
 import DetailedBudgetHistoryChart from "~/components/DetailedBudgetHistoryChart";
@@ -45,7 +46,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     ? new Date("endDate")
     : endOfMonth(currentDate);
 
-  const budgetHistory = await getBudgetHistory(userId, startDate, endDate);
+  const budgetHistory = await getBudgetHistoryByMonth(
+    userId,
+    startDate,
+    endDate
+  );
   if (process.env.NODE_ENV === "development") {
     console.log(
       "Fetched Budget History:",
@@ -88,6 +93,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     recentTransactions,
     upcomingBills,
     user,
+    startDate,
+    endDate,
   });
 };
 
@@ -117,6 +124,8 @@ export default function Dashboard() {
     recentTransactions,
     user,
     upcomingBills,
+    startDate,
+    endDate,
   } = useLoaderData<typeof loader>();
 
   const {
@@ -127,25 +136,51 @@ export default function Dashboard() {
     currentReplayEvent,
   } = useReplay();
   const [balance, setBalance] = useState(accountBalance);
-  const [selectedBudget, setSelectedBudget] = useState(budgetHistory[0]?.id);
   const [isUpdateDrawerOpen, setIsUpdateDrawerOpen] = useState(false);
+  const [selectedBudget, setSelectedBudget] = useState(budgetHistory[0]?.id);
   //TODO: Add state for isCapped here and fetcher get method to toggle isCapped state
-
-  const [dateRange, setDateRange] = useState({
-    startDate: startOfMonth(new Date()),
-    endDate: endOfMonth(new Date()),
-  });
 
   const [isDetailedView, setIsDetailedView] = useState(false);
   const fetcher = useFetcher();
 
+  const rStartDate = fetcher.data?.startDate || startDate;
+  const rEndDate = fetcher.data?.endDate || endDate;
+  const rBudgetHistory = fetcher.data?.budgetHistory || budgetHistory;
+
+  const [dateRange, setDateRange] = useState({
+    startDate: startOfMonth(rStartDate),
+    endDate: endOfMonth(rEndDate),
+  });
   useEffect(() => {
     recentTransactions.forEach(recordEvent);
   }, [recentTransactions, recordEvent]);
 
-  const handleDateRangeChange = (newDateRange) => {
+  const handleDateRangeChange = (newDateRange: DateRangeResult) => {
     setDateRange(newDateRange);
     // You might want to trigger a new data fetch here or use a submit function to reload the page with new query params
+    // Ensure we're working with Date objects
+    const start =
+      newDateRange.startDate instanceof Date
+        ? newDateRange.startDate
+        : new Date(newDateRange.startDate);
+    const end =
+      newDateRange.endDate instanceof Date
+        ? newDateRange.endDate
+        : new Date(newDateRange.endDate);
+
+    // Format dates as ISO strings for the URL
+    const formattedStartDate = start.toISOString().split("T")[0];
+    const formattedEndDate = end.toISOString().split("T")[0];
+
+    console.log("New Date Range:", {
+      startDate: formattedStartDate,
+      endDate: formattedEndDate,
+    });
+
+    fetcher.submit(
+      { startDate: formattedStartDate, endDate: formattedEndDate },
+      { method: "get" }
+    );
   };
 
   const toggleChartView = () => {
