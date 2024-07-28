@@ -59,14 +59,27 @@ export async function getBudgetPerformance(userId: string) {
     },
   });
 
-  return budgets.map(budget => ({
-    id: budget.id,
-    name: budget.name,
-    category: budget.category,
-    budgetedAmount: budget.amount,
-    actualAmount: budget?.transactions?.reduce((sum, transaction) => sum + transaction.amount, 0),
-    performance: budget?.transactions?.reduce((sum, transaction) => sum + transaction.amount, 0) / budget.amount,
-  })) satisfies BudgetPerformance[];
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Fetched budgets with transactions:', JSON.stringify(budgets, null, 2));
+  }
+
+  return budgets.map(budget => {
+    const actualAmount = budget?.transactions?.reduce((sum, transaction) => sum + transaction.amount, 0);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Budget ${budget.name}: Actual amount = ${actualAmount}`);
+
+    }
+    // const performance=  budget?.transactions?.reduce((sum, transaction) => sum + transaction.amount, 0) / budget.amount;
+    const performance = budget.amount > 0 ? actualAmount / budget.amount : 0;
+    return {
+      id: budget.id,
+      name: budget.name,
+      category: budget.category,
+      budgetedAmount: budget.amount,
+      actualAmount,
+      performance,
+    } satisfies BudgetPerformance;
+  }) satisfies BudgetPerformance[];
 }
 
 // app/utils/budgets.server.ts
