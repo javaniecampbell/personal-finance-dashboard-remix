@@ -93,8 +93,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     recentTransactions,
     upcomingBills,
     user,
-    startDate,
-    endDate,
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
   });
 };
 
@@ -147,9 +147,13 @@ export default function Dashboard() {
   const rEndDate = fetcher.data?.endDate || endDate;
   const rBudgetHistory = fetcher.data?.budgetHistory || budgetHistory;
 
+  console.log("Updated Start Date received:", rStartDate);
+  console.log("Updated End Date received:", rEndDate);
+  console.log("Updated Budget History received:", rBudgetHistory);
+
   const [dateRange, setDateRange] = useState({
-    startDate: startOfMonth(rStartDate),
-    endDate: endOfMonth(rEndDate),
+    startDate: new Date(startDate),
+    endDate: new Date(endDate),
   });
   useEffect(() => {
     recentTransactions.forEach(recordEvent);
