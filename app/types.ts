@@ -26,6 +26,7 @@ export type UserSettings = {
   notifyOnBudgetExceeded: boolean;
   lowBalanceThreshold: number;
 };
+export type TransactionType = 'income' | 'expense';
 
 export type Transaction = {
   id: string;
@@ -33,7 +34,21 @@ export type Transaction = {
   description: string;
   category: string;
   date: Date;
-  type: 'income' | 'expense';
+  type: TransactionType
+};
+
+
+export type FullTransaction = {
+  id: string;
+  userId: string;
+  budgetId?: string;
+  amount: number;
+  description: string;
+  category: string;
+  date: Date;
+  type: TransactionType;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type Budget = {
