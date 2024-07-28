@@ -139,7 +139,21 @@ export type UserBudget = {
   userId: string;
 };
 
+export type SimpleBudgetHistoryEntry = {
+  id: string;
+  budgetId: string;
+  date: string; // ISO date string
+  budgetedAmount: number;
+  actualAmount: number;
+  performance: number;
+};
 
+export type SimpleBudgetHistory = {
+  id: string;
+  name: string;
+  category: string;
+  history: SimpleBudgetHistoryEntry[];
+};
 export type BudgetHistoryEntry = {
   id: string;
   budgetId: string;
