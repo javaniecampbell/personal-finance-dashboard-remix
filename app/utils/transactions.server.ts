@@ -55,6 +55,51 @@ export async function createTransaction(userId: string, transactionData: {
   });
 }
 
+export async function updateTransactionsBudgets(userId: string) {
+  // Step 1: Get all transactions for the user that don't have a budgetId
+  const transactions = await db.transaction.findMany({
+    where: {
+      userId,
+      budgetId: null, // Only get transactions without a budget
+    },
+  });
+
+  // Step 2: Get all budgets for the user
+  const budgets = await db.budget.findMany({
+    where: { userId },
+  });
+
+  // Step 3: Create a map of category to budget ID for quick lookup
+  const categoryToBudgetMap = new Map(
+    budgets.map(budget => [budget.category, budget.id])
+  );
+
+  // Step 4: Update transactions
+  const updates = transactions.map(transaction => {
+    const budgetId = categoryToBudgetMap.get(transaction.category);
+    if (budgetId) {
+      return db.transaction.update({
+        where: { id: transaction.id },
+        data: { budgetId },
+      });
+    }
+    // If no matching budget found, we'll skip this transaction
+    return Promise.resolve(null);
+  });
+
+  // Step 5: Execute all updates
+  const results = await Promise.all(updates);
+
+  // Step 6: Count successful updates
+  const updatedCount = results.filter(result => result !== null).length;
+
+  return {
+    totalTransactions: transactions.length,
+    updatedTransactions: updatedCount,
+  };
+}
+
+
 export async function updateTransaction(userId: string, transactionId: string, data: {
   description?: string;
   amount?: number;
