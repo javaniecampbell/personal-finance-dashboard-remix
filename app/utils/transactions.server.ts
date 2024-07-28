@@ -29,17 +29,28 @@ export async function getTransactions(userId: string, options: {
   return { transactions, totalCount };
 }
 
-export async function createTransaction(userId: string, data: {
+export async function createTransaction(userId: string, transactionData: {
   description: string;
   amount: number;
   date: Date;
   category: string;
   type: 'income' | 'expense';
 }) {
+  const { budgetId, ...data } = transactionData;
+
+  // Find the appropriate budget based on the transaction's category
+  const budget = await db.budget.findFirst({
+    where: {
+      userId,
+      category: data.category,
+    },
+  });
+
   return db.transaction.create({
     data: {
       ...data,
       user: { connect: { id: userId } },
+      budget: budget ? { connect: { id: budget?.id } } : undefined, // Link the transaction to the budget if it exists
     },
   });
 }
