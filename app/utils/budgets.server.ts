@@ -41,7 +41,7 @@ export async function deleteBudget(userId: string, budgetId: string) {
   });
 }
 
-export async function getBudgetPerformance(userId: string, isCapped: boolean = false) {
+export async function getBudgetPerformance(userId: string, isCapped: boolean = false, isChangeRate: boolean = false) {
   const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
   const budgets = await db.budget.findMany({
@@ -76,6 +76,9 @@ export async function getBudgetPerformance(userId: string, isCapped: boolean = f
     // Cap performance at 100% if it exceeds 100% and isCapped is true
     if (isCapped && performance > 100) {
       performance = 100; // Cap at 100%
+    } else if (isChangeRate === true) {
+      // This can now be positive (over budget) or negative (under budget)
+      performance = budget.amount > 0 ? ((actualAmount - budget.amount) / budget.amount) * 100 : 0;
     }
 
     return {
