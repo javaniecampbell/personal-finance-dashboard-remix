@@ -82,6 +82,21 @@ export async function getBillHistory(userId: string) {
     take: 10,
   });
 }
+/**
+ * Bill Categorization:
+ * Categorizing bills can help users understand their fixed expenses:
+ */
+export async function getBillsByCategory(userId: string) {
+  return db.bill.groupBy({
+    by: ['category'],
+    where: { userId },
+    _sum: {
+      amount: true
+    },
+    _count: true
+  });
+}
+
 
 export async function createBill(userId: string, data: {
   name: string;
@@ -153,3 +168,4 @@ export async function scheduleBillPayment(userId: string, billId: string, amount
     frequency: updated.frequency as 'weekly' | 'monthly' | 'yearly',
   };
 }
+
