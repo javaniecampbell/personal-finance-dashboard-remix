@@ -1,8 +1,10 @@
+import { ArrowDown, ArrowDownIcon, ArrowUpIcon } from "lucide-react";
 import React from "react";
 import { formatCurrency, formatPercentage } from "~/utils/formatters";
 
 type BudgetOverviewProps = {
   isCapped?: boolean;
+  isChangeRate?: boolean;
   budgetOverview: {
     budgets: Array<{ amount: number }>;
     performance: Array<{ budgetedAmount: number; actualAmount: number }>;
@@ -12,6 +14,7 @@ type BudgetOverviewProps = {
 const BudgetOverview: React.FC<BudgetOverviewProps> = ({
   budgetOverview,
   isCapped,
+  isChangeRate,
 }) => {
   const { performance } = budgetOverview;
 
@@ -33,8 +36,18 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({
   }
   // Calculate overall performance as a percentage
   // const overallPerformance = totalPlanned > 0 ? totalActual / totalPlanned : 0;
-  const overallPerformance =
+  let overallPerformance: number = 0;
+
+  overallPerformance =
     totalPlanned > 0 ? (totalActual / totalBudgeted) * 100 : 0;
+  if (isChangeRate === true) {
+    const overallPerformanceChangeRate =
+      totalBudgeted > 0
+        ? ((totalActual - totalBudgeted) / totalBudgeted) * 100
+        : 0;
+    overallPerformance = overallPerformanceChangeRate;
+  }
+
   const remainingBudget = totalBudgeted - totalActual;
 
   if (process.env.NODE_ENV === "development") {
@@ -44,6 +57,17 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({
   }
 
   const isOverBudget = remainingBudget < 0;
+
+  const PerformanceIndicator = ({ value }) => (
+    <span
+      className={`flex items-center ${
+        value >= 0 ? "text-red-600" : "text-green-600"
+      }`}
+    >
+      {value >= 0 ? <ArrowUpIcon size={16} /> : <ArrowDownIcon size={16} />}
+      {formatPercentage(Math.abs(value / 100))}
+    </span>
+  );
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
@@ -66,19 +90,33 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({
           <p
             className={`text-2xl font-semibold ${
               isOverBudget ? "text-red-600" : "text-green-600"
+            } ${
+              isChangeRate ? "flex-col items-center" : "flex items-center gap-1"
             }`}
           >
-            {formatCurrency(Math.abs(remainingBudget))}
-            {isOverBudget ? " Over" : ""}
+            <div className="flex items-center">
+              {isOverBudget === true && isChangeRate === true ? (
+                <ArrowUpIcon size={16} />
+              ) : isOverBudget === false && isChangeRate === true ? (
+                <ArrowDownIcon size={16} />
+              ) : null}
+              {formatCurrency(Math.abs(remainingBudget))}
+            </div>
+            <div className={`${isChangeRate === true ? "flex pl-1" : ""}`}>
+              {isOverBudget ? " Over" : ""}
+            </div>
           </p>
         </div>
         <div>
           <p className="text-gray-600">Overall Performance</p>
           <p
-            className={`text-2xl font-semibold ${
+            className={`text-2xl font-semibold  ${
               isOverBudget ? "text-red-600" : "text-green-600"
             }`}
           >
+            {isChangeRate === true && (
+              <PerformanceIndicator value={overallPerformance} />
+            )}
             {/* Display "Over Budget" instead of a percentage when spending exceeds the budget with appropriate colour */}
             {isCapped === true && isOverBudget
               ? "Over Budget"
