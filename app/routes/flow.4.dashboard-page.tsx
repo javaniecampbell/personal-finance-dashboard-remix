@@ -225,20 +225,33 @@ export default function Dashboard() {
                   : "Switch to Detailed View"}
               </button>
             </div>
-            {selectedBudget &&
-              (isDetailedView ? (
-                <DetailedBudgetHistoryChart
-                  budgetHistory={budgetHistory.find(
-                    (b) => b.id === selectedBudget
-                  )}
-                />
-              ) : (
-                <BudgetHistoryChart
-                  budgetHistory={budgetHistory.find(
-                    (b) => b.id === selectedBudget
-                  )}
-                />
-              ))}
+            {selectedBudget && (
+              <>
+                {isDetailedView ? (
+                  <DetailedBudgetHistoryChart
+                    budgetHistory={
+                      budgetHistory.find((b) => b.id === selectedBudget) || {
+                        id: "",
+                        name: "No Data",
+                        category: "",
+                        history: [],
+                      }
+                    }
+                  />
+                ) : (
+                  <BudgetHistoryChart
+                    budgetHistory={
+                      budgetHistory.find((b) => b.id === selectedBudget) || {
+                        id: "",
+                        name: "No Data",
+                        category: "",
+                        history: [],
+                      }
+                    }
+                  />
+                )}
+              </>
+            )}
           </div>
 
           <div className="bg-white overflow-hidden shadow rounded-lg mb-6 mt-8">
