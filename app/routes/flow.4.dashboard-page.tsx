@@ -72,7 +72,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const result = await updateTransactionsBudgets(userId);
     return json(result);
   }
-
+  // TODO: Add fetcher get method to toggle isCapped state
   // ... other actions ...
 };
 
@@ -94,6 +94,7 @@ export default function Dashboard() {
   } = useReplay();
   const [balance, setBalance] = useState(accountBalance);
   const [isUpdateDrawerOpen, setIsUpdateDrawerOpen] = useState(false);
+  //TODO: Add state for isCapped here and fetcher get method to toggle isCapped state
 
   useEffect(() => {
     recentTransactions.forEach(recordEvent);
