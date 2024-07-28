@@ -20,7 +20,14 @@ import {
 } from "~/utils/transactions.server";
 import { getUser } from "~/utils/user.server";
 import BudgetHistoryChart from "~/components/BudgetHistoryChart";
-import { startOfMonth, endOfMonth, subMonths } from "date-fns";
+import {
+  startOfMonth,
+  endOfMonth,
+  subMonths,
+  parseISO,
+  isValid,
+  add,
+} from "date-fns";
 import {
   getBudgetHistory,
   getBudgetHistoryByMonth,
@@ -28,6 +35,8 @@ import {
 } from "~/utils/budgetHistory.server";
 import DetailedBudgetHistoryChart from "~/components/DetailedBudgetHistoryChart";
 import { DateRangePicker } from "~/components/DateRangePicker";
+import { useNotification } from "~/components/ErrorNotification";
+import { ca } from "date-fns/locale";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userId = await requireUserId(request);
@@ -43,7 +52,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     ? new Date(url.searchParams.get("startDate")!)
     : startOfMonth(subMonths(currentDate, 3));
   const endDate = url.searchParams.get("endDate")
-    ? new Date("endDate")
+    ? new Date(url.searchParams.get("endDate"))
     : endOfMonth(currentDate);
 
   const budgetHistory = await getBudgetHistoryByMonth(
@@ -135,6 +144,8 @@ export default function Dashboard() {
     isReplaying,
     currentReplayEvent,
   } = useReplay();
+
+  const { addNotification } = useNotification();
   const [balance, setBalance] = useState(accountBalance);
   const [isUpdateDrawerOpen, setIsUpdateDrawerOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState(budgetHistory[0]?.id);
@@ -152,39 +163,51 @@ export default function Dashboard() {
   console.log("Updated Budget History received:", rBudgetHistory);
 
   const [dateRange, setDateRange] = useState({
-    startDate: new Date(startDate),
-    endDate: new Date(endDate),
+    startDate: new Date(rStartDate),
+    endDate: new Date(rEndDate),
   });
   useEffect(() => {
     recentTransactions.forEach(recordEvent);
   }, [recentTransactions, recordEvent]);
 
   const handleDateRangeChange = (newDateRange: DateRangeResult) => {
-    setDateRange(newDateRange);
-    // You might want to trigger a new data fetch here or use a submit function to reload the page with new query params
-    // Ensure we're working with Date objects
-    const start =
-      newDateRange.startDate instanceof Date
-        ? newDateRange.startDate
-        : new Date(newDateRange.startDate);
-    const end =
-      newDateRange.endDate instanceof Date
-        ? newDateRange.endDate
-        : new Date(newDateRange.endDate);
+    try {
+      const start =
+        newDateRange.startDate instanceof Date
+          ? newDateRange.startDate
+          : parseISO(newDateRange.startDate);
+      const end =
+        newDateRange.endDate instanceof Date
+          ? newDateRange.endDate
+          : parseISO(newDateRange.endDate);
 
-    // Format dates as ISO strings for the URL
-    const formattedStartDate = start.toISOString().split("T")[0];
-    const formattedEndDate = end.toISOString().split("T")[0];
+      if (!isValid(start) || !isValid(end)) {
+        console.error("Invalid date range selected");
+        addNotification("Invalid date range selected", "error");
+        return;
+      }
 
-    console.log("New Date Range:", {
-      startDate: formattedStartDate,
-      endDate: formattedEndDate,
-    });
+      setDateRange(newDateRange);
+      // Format dates as ISO strings for the URL
+      const formattedStartDate = start.toISOString().split("T")[0];
+      const formattedEndDate = end.toISOString().split("T")[0];
 
-    fetcher.submit(
-      { startDate: formattedStartDate, endDate: formattedEndDate },
-      { method: "get" }
-    );
+      addNotification("New Date Range selected", "info");
+      console.log("New Date Range:", {
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      });
+
+      addNotification("Fetching budget history data...", "info");
+
+      fetcher.submit(
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+        { method: "get" }
+      );
+    } catch (error) {
+      console.error("Error fetching budget history data:", error);
+      addNotification("Error fetching budget history data", "error");
+    }
   };
 
   const toggleChartView = () => {
@@ -192,7 +215,17 @@ export default function Dashboard() {
   };
 
   const handleRecordHistory = () => {
-    fetcher.submit({ _action: "recordBudgetHistory" }, { method: "post" });
+    try {
+      fetcher.submit({ _action: "recordBudgetHistory" }, { method: "post" });
+      addNotification(
+        `Recorded ${fetcher.data?.recordedEntries ?? 0} out of
+        ${fetcher?.data?.totalBudgets ?? 0} budget entries.`,
+        "info"
+      );
+    } catch (error) {
+      console.error("Error recording budget history:", error);
+      addNotification("Error recording budget history", "error");
+    }
   };
 
   const handleReplay = () => {
@@ -259,12 +292,13 @@ export default function Dashboard() {
                 Record Current Budget History
               </button>
             </div>
-            {fetcher.data && (
-              <p className="mb-4 text-green-600">
-                Recorded {fetcher.data.recordedEntries} out of{" "}
-                {fetcher.data.totalBudgets} budget entries.
-              </p>
-            )}
+            {/* {fetcher.data &&
+              fetcher.formData._action === "recordBudgetHistory" && (
+                <p className="mb-4 text-green-600">
+                  Recorded {fetcher.data.recordedEntries} out of{" "}
+                  {fetcher.data.totalBudgets} budget entries.
+                </p>
+              )} */}
 
             <div className="flex justify-between items-center mb-4">
               <div>
