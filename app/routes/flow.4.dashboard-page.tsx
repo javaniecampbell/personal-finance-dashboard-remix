@@ -40,6 +40,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const endDate = endOfMonth(currentDate);
 
   const budgetHistory = await getBudgetHistory(userId, startDate, endDate);
+  if (process.env.NODE_ENV === "development") {
+    console.log("Fetched Budget History:", JSON.stringify(budgetHistory, null, 4));
+  }
 
   const metrics = (await createSpan("fetch-metrics", async () => {
     // In a real application, you would fetch this data from your OpenTelemetry backend
