@@ -64,6 +64,8 @@ model Transaction {
   budgetId       String?
   budget         Budget?         @relation(fields: [budgetId], references: [id])
   user           User            @relation(fields: [userId], references: [id])
+  accountId      String?
+  account        Account?        @relation(fields: [accountId], references: [id])
 }
 
 model BudgetHistory {
@@ -166,19 +168,20 @@ model FAQ {
 }
 
 model Account {
-  id             String      @id @default(uuid())
+  id             String        @id @default(uuid())
   userId         String
   name           String
   type           AccountType
   balance        Float
-  currency       String      @default("USD")
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  xata_id        String      @unique(map: "Account__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
-  xata_version   Int         @default(0)
-  xata_createdat DateTime    @default(now()) @db.Timestamptz(6)
-  xata_updatedat DateTime    @default(now()) @db.Timestamptz(6)
-  user           User        @relation(fields: [userId], references: [id])
+  currency       String        @default("USD")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  xata_id        String        @unique(map: "Account__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
+  xata_version   Int           @default(0)
+  xata_createdat DateTime      @default(now()) @db.Timestamptz(6)
+  xata_updatedat DateTime      @default(now()) @db.Timestamptz(6)
+  user           User          @relation(fields: [userId], references: [id])
+  Transaction    Transaction[]
 }
 
 enum Theme {
@@ -189,6 +192,7 @@ enum Theme {
 enum TransactionType {
   income
   expense
+  transfer
 }
 
 enum BudgetPeriod {
