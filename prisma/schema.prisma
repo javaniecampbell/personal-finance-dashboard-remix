@@ -66,21 +66,35 @@ model Transaction {
   user           User            @relation(fields: [userId], references: [id])
 }
 
+model BudgetHistory {
+  id             String   @id @default(uuid())
+  budgetId       String
+  budget         Budget   @relation(fields: [budgetId], references: [id])
+  date           DateTime
+  budgetedAmount Float
+  actualAmount   Float
+  performance    Float
+  createdAt      DateTime @default(now())
+
+  @@index([budgetId, date])
+}
+
 model Budget {
-  id             String        @id @default(cuid())
+  id             String          @id @default(cuid())
   userId         String
   name           String
   amount         Float
   category       String
   period         BudgetPeriod
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  xata_id        String        @unique(map: "Budget__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
-  xata_version   Int           @default(0)
-  xata_createdat DateTime      @default(now()) @db.Timestamptz(6)
-  xata_updatedat DateTime      @default(now()) @db.Timestamptz(6)
-  user           User          @relation(fields: [userId], references: [id])
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  xata_id        String          @unique(map: "Budget__pgroll_new_xata_id_key") @default(dbgenerated("('rec_'::text || (xata_private.xid())::text)"))
+  xata_version   Int             @default(0)
+  xata_createdat DateTime        @default(now()) @db.Timestamptz(6)
+  xata_updatedat DateTime        @default(now()) @db.Timestamptz(6)
+  user           User            @relation(fields: [userId], references: [id])
   transactions   Transaction[]
+  BudgetHistory  BudgetHistory[]
 }
 
 model Bill {
