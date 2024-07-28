@@ -1,5 +1,5 @@
 import { ActionFunctionArgs, json, LoaderFunctionArgs } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
+import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 import { Pause, Play, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import BudgetDetailTable from "~/components/BudgetDetailTable";
@@ -21,7 +21,10 @@ import {
 import { getUser } from "~/utils/user.server";
 import BudgetHistoryChart from "~/components/BudgetHistoryChart";
 import { startOfMonth, endOfMonth, subMonths } from "date-fns";
-import { getBudgetHistory } from "~/utils/budgetHistory.server";
+import {
+  getBudgetHistory,
+  recordBudgetHistory,
+} from "~/utils/budgetHistory.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userId = await requireUserId(request);
@@ -86,6 +89,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
   // TODO: Add fetcher get method to toggle isCapped state
   // ... other actions ...
+
+  if (_action === "recordBudgetHistory") {
+    const result = await recordBudgetHistory(userId);
+    return json(result);
+  }
 };
 
 export default function Dashboard() {
@@ -110,6 +118,11 @@ export default function Dashboard() {
   const [isUpdateDrawerOpen, setIsUpdateDrawerOpen] = useState(false);
   //TODO: Add state for isCapped here and fetcher get method to toggle isCapped state
 
+  const fetcher = useFetcher();
+
+  const handleRecordHistory = () => {
+    fetcher.submit({ _action: "recordBudgetHistory" }, { method: "post" });
+  };
   useEffect(() => {
     recentTransactions.forEach(recordEvent);
   }, [recentTransactions, recordEvent]);
@@ -170,17 +183,31 @@ export default function Dashboard() {
             <h2 className="text-2xl font-semibold mb-4">
               Historical Performance
             </h2>
-            <select
-              value={selectedBudget}
-              onChange={(e) => setSelectedBudget(e.target.value)}
-              className="mb-4 p-2 border rounded"
-            >
-              {budgetHistory.map((budget) => (
-                <option key={budget.id} value={budget.id}>
-                  {budget.name}
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-2">
+              <select
+                value={selectedBudget}
+                onChange={(e) => setSelectedBudget(e.target.value)}
+                className="mb-4 p-2 border rounded"
+              >
+                {budgetHistory.map((budget) => (
+                  <option key={budget.id} value={budget.id}>
+                    {budget.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleRecordHistory}
+                className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Record Current Budget History
+              </button>
+            </div>
+            {fetcher.data && (
+              <p className="mb-4 text-green-600">
+                Recorded {fetcher.data.recordedEntries} out of{" "}
+                {fetcher.data.totalBudgets} budget entries.
+              </p>
+            )}
             {selectedBudget && (
               <BudgetHistoryChart
                 budgetHistory={budgetHistory.find(
@@ -190,7 +217,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
+          <div className="bg-white overflow-hidden shadow rounded-lg mb-6 mt-8">
             <div className="px-4 py-5 sm:p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-medium text-gray-900">
