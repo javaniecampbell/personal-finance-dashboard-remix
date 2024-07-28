@@ -228,7 +228,7 @@ async function getDebtToIncomeRatio(userId: string) {
  * We can use categories to provide insights into spending patterns
  * 
 */
-export async function getSpendingByCategory(userId: string, startDate: Date, endDate: Date) {
+export async function getSpendingByCategoryAggregation(userId: string, startDate: Date, endDate: Date) {
   const transactions = await db.transaction.groupBy({
     by: ['category'],
     where: {
