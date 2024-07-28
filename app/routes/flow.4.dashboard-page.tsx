@@ -26,6 +26,7 @@ import {
   recordBudgetHistory,
 } from "~/utils/budgetHistory.server";
 import DetailedBudgetHistoryChart from "~/components/DetailedBudgetHistoryChart";
+import { DateRangePicker } from "~/components/DateRangePicker";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userId = await requireUserId(request);
@@ -35,13 +36,21 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const budgetOverview = await getBudgetOverview(userId);
   const upcomingBills = await getUpcomingBills(userId);
 
+  const url = new URL(request.url);
   const currentDate = new Date();
-  const startDate = startOfMonth(subMonths(currentDate, 3));
-  const endDate = endOfMonth(currentDate);
+  const startDate = url.searchParams.get("startDate")
+    ? new Date(url.searchParams.get("startDate")!)
+    : startOfMonth(subMonths(currentDate, 3));
+  const endDate = url.searchParams.get("endDate")
+    ? new Date("endDate")
+    : endOfMonth(currentDate);
 
   const budgetHistory = await getBudgetHistory(userId, startDate, endDate);
   if (process.env.NODE_ENV === "development") {
-    console.log("Fetched Budget History:", JSON.stringify(budgetHistory, null, 4));
+    console.log(
+      "Fetched Budget History:",
+      JSON.stringify(budgetHistory, null, 4)
+    );
   }
 
   const metrics = (await createSpan("fetch-metrics", async () => {
@@ -121,12 +130,23 @@ export default function Dashboard() {
   const [selectedBudget, setSelectedBudget] = useState(budgetHistory[0]?.id);
   const [isUpdateDrawerOpen, setIsUpdateDrawerOpen] = useState(false);
   //TODO: Add state for isCapped here and fetcher get method to toggle isCapped state
+
+  const [dateRange, setDateRange] = useState({
+    startDate: startOfMonth(new Date()),
+    endDate: endOfMonth(new Date()),
+  });
+
   const [isDetailedView, setIsDetailedView] = useState(false);
   const fetcher = useFetcher();
 
   useEffect(() => {
     recentTransactions.forEach(recordEvent);
   }, [recentTransactions, recordEvent]);
+
+  const handleDateRangeChange = (newDateRange) => {
+    setDateRange(newDateRange);
+    // You might want to trigger a new data fetch here or use a submit function to reload the page with new query params
+  };
 
   const toggleChartView = () => {
     setIsDetailedView(!isDetailedView);
@@ -208,17 +228,24 @@ export default function Dashboard() {
             )}
 
             <div className="flex justify-between items-center mb-4">
-              <select
-                value={selectedBudget}
-                onChange={(e) => setSelectedBudget(e.target.value)}
-                className="p-2 border rounded"
-              >
-                {budgetHistory.map((budget) => (
-                  <option key={budget.id} value={budget.id}>
-                    {budget.name}
-                  </option>
-                ))}
-              </select>
+              <div>
+                <select
+                  value={selectedBudget}
+                  onChange={(e) => setSelectedBudget(e.target.value)}
+                  className="p-2 border rounded"
+                >
+                  {budgetHistory.map((budget) => (
+                    <option key={budget.id} value={budget.id}>
+                      {budget.name}
+                    </option>
+                  ))}
+                </select>
+                <DateRangePicker
+                  startDate={dateRange.startDate}
+                  endDate={dateRange.endDate}
+                  onChange={handleDateRangeChange}
+                />
+              </div>
               <button
                 onClick={toggleChartView}
                 className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600"
