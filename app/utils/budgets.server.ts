@@ -42,13 +42,17 @@ export async function deleteBudget(userId: string, budgetId: string) {
 }
 
 export async function getBudgetPerformance(userId: string) {
+  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
   const budgets = await db.budget.findMany({
     where: { userId },
     include: {
       transactions: {
         where: {
           date: {
-            gte: new Date(new Date().setDate(new Date().getDate() - 30)), // Last 30 days
+            // gte: new Date(new Date().setDate(new Date().getDate() - 30)), // Last 30 days
+            gte: startOfMonth,
+            lt: endOfMonth,
           },
         },
       },
