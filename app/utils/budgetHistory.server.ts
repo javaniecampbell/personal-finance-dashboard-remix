@@ -1,7 +1,7 @@
 
-import { RecordBudgetHistoryResult } from "~/types";
+import { BudgetHistory, RecordBudgetHistoryResult } from "~/types";
 import { db } from "./db.server";
-import { startOfMonth, endOfMonth, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns';
+import { startOfMonth, endOfMonth, eachDayOfInterval, startOfDay, endOfDay, eachMonthOfInterval } from 'date-fns';
 
 export async function getBudgetHistory(userId: string, startDate: Date, endDate: Date) {
   const budgets = await db.budget.findMany({
@@ -39,6 +39,55 @@ export async function getBudgetHistory(userId: string, startDate: Date, endDate:
           spentPercentage: historyEntry?.spentPercentage || 0,
         };
       }),
+    };
+  });
+}
+
+export async function getBudgetHistoryByMonth(userId: string, startDate: Date, endDate: Date): Promise<BudgetHistory[]> {
+  const budgets = await db.budget.findMany({
+    where: { userId },
+    include: {
+      transactions: {
+        where: {
+          date: {
+            gte: startOfMonth(startDate),
+            lte: endOfMonth(endDate),
+          },
+        },
+      },
+    },
+  });
+
+  const months = eachMonthOfInterval({ start: startDate, end: endDate });
+
+  return budgets.map(budget => {
+    const history = months.map(month => {
+      const monthStart = startOfMonth(month);
+      const monthEnd = endOfMonth(month);
+
+      const budgetedAmount = budget.amount; // Assuming budget.amount is monthly
+
+      const actualAmount = budget.transactions
+        .filter(t => t.date >= monthStart && t.date <= monthEnd)
+        .reduce((sum, t) => sum + (t.type === 'expense' ? t.amount : 0), 0);
+
+      const performance = budgetedAmount > 0 ? ((actualAmount - budgetedAmount) / budgetedAmount) * 100 : 0;
+      const spentPercentage = budgetedAmount > 0 ? (actualAmount / budgetedAmount) * 100 : 0;
+
+      return {
+        date: monthStart.toISOString(),
+        budgetedAmount,
+        actualAmount,
+        performance,
+        spentPercentage,
+      };
+    });
+
+    return {
+      id: budget.id,
+      name: budget.name,
+      category: budget.category,
+      history,
     };
   });
 }
