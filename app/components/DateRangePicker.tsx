@@ -1,5 +1,5 @@
-import React from 'react';
-import { startOfMonth, endOfMonth } from 'date-fns';
+import React from "react";
+import { startOfMonth, endOfMonth } from "date-fns";
 
 type DateRangePickerProps = {
   startDate: Date;
@@ -7,7 +7,11 @@ type DateRangePickerProps = {
   onChange: (dateRange: { startDate: Date; endDate: Date }) => void;
 };
 
-export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, endDate, onChange }) => {
+export const DateRangePicker: React.FC<DateRangePickerProps> = ({
+  startDate,
+  endDate,
+  onChange,
+}) => {
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange({ startDate: new Date(e.target.value), endDate });
   };
@@ -18,19 +22,23 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, end
 
   return (
     <div>
-      <label>
+      <label htmlFor="startDate">
         Start Date:
         <input
+          id="startDate"
+          name="startDate"
           type="date"
-          value={startDate.toISOString().split('T')[0]}
+          value={startDate.toISOString().split("T")[0]}
           onChange={handleStartDateChange}
         />
       </label>
-      <label>
+      <label htmlFor="endDate">
         End Date:
         <input
+          id="endDate"
+          name="endDate"
           type="date"
-          value={endDate.toISOString().split('T')[0]}
+          value={endDate.toISOString().split("T")[0]}
           onChange={handleEndDateChange}
         />
       </label>
