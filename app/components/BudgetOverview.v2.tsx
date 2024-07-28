@@ -2,13 +2,17 @@ import React from "react";
 import { formatCurrency, formatPercentage } from "~/utils/formatters";
 
 type BudgetOverviewProps = {
+  isCapped?: boolean;
   budgetOverview: {
     budgets: Array<{ amount: number }>;
     performance: Array<{ budgetedAmount: number; actualAmount: number }>;
   };
 };
 
-const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgetOverview }) => {
+const BudgetOverview: React.FC<BudgetOverviewProps> = ({
+  budgetOverview,
+  isCapped,
+}) => {
   const { performance } = budgetOverview;
 
   const totalBudgeted = performance.reduce(
@@ -27,7 +31,10 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgetOverview }) => {
   if (process.env.NODE_ENV === "development") {
     console.log("Budget Performance data", performance);
   }
-  const overallPerformance = totalPlanned > 0 ? totalActual / totalPlanned : 0;
+  // Calculate overall performance as a percentage
+  // const overallPerformance = totalPlanned > 0 ? totalActual / totalPlanned : 0;
+  const overallPerformance =
+    totalPlanned > 0 ? (totalActual / totalBudgeted) * 100 : 0;
   const remainingBudget = totalBudgeted - totalActual;
 
   if (process.env.NODE_ENV === "development") {
@@ -67,18 +74,33 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgetOverview }) => {
         </div>
         <div>
           <p className="text-gray-600">Overall Performance</p>
-          <p className="text-2xl font-semibold">
-            {formatPercentage(overallPerformance)}
+          <p
+            className={`text-2xl font-semibold ${
+              isOverBudget ? "text-red-600" : "text-green-600"
+            }`}
+          >
+            {/* Display "Over Budget" instead of a percentage when spending exceeds the budget with appropriate colour */}
+            {isCapped === true && isOverBudget
+              ? "Over Budget"
+              : formatPercentage(overallPerformance / 100)}
           </p>
         </div>
       </div>
       <div className="mt-4">
         <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+          {/* Adjust the progress bar to max out at 100% width if isCapped is true */}
           <div
             className={`h-2.5 rounded-full ${
               isOverBudget ? "bg-red-600" : "bg-green-600"
             }`}
-            style={{ width: `${Math.min(overallPerformance * 100, 100)}%` }}
+            style={{
+              width: `${Math.min(
+                isCapped === true
+                  ? overallPerformance
+                  : overallPerformance * 100,
+                100
+              )}%`,
+            }}
           ></div>
         </div>
       </div>
