@@ -1,3 +1,5 @@
+// app/utils/analytics.server.ts
+
 import { FinancialHealthIndicators } from "~/types";
 import { db } from "./db.server";
 
@@ -218,4 +220,29 @@ async function getDebtToIncomeRatio(userId: string) {
   });
 
   return (totalDebt._sum.balance || 0) / (monthlyIncome._sum.amount || 1);
+}
+
+
+/**
+ * Analyzing Spending by Category:
+ * We can use categories to provide insights into spending patterns
+ * 
+*/
+export async function getSpendingByCategory(userId: string, startDate: Date, endDate: Date) {
+  const transactions = await db.transaction.groupBy({
+    by: ['category'],
+    where: {
+      userId,
+      date: { gte: startDate, lte: endDate },
+      type: 'expense'
+    },
+    _sum: {
+      amount: true
+    }
+  });
+
+  return transactions.map(t => ({
+    category: t.category,
+    amount: t._sum.amount || 0
+  }));
 }
