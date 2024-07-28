@@ -24,6 +24,19 @@ const BudgetHistoryChart: React.FC<BudgetHistoryChartProps> = ({
     Performance: h.performance,
   }));
 
+  if (data.length === 0) {
+    return (
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">
+          {budgetHistory.name} - Historical Performance
+        </h3>
+        <div>No budget history data available for the selected period.</div>
+      </div>
+    );
+  }
+
+  
+
   return (
     <div className="mt-8">
       <h3 className="text-xl font-semibold mb-4">
