@@ -25,6 +25,7 @@ import {
   getBudgetHistory,
   recordBudgetHistory,
 } from "~/utils/budgetHistory.server";
+import DetailedBudgetHistoryChart from "~/components/DetailedBudgetHistoryChart";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userId = await requireUserId(request);
@@ -117,15 +118,20 @@ export default function Dashboard() {
   const [selectedBudget, setSelectedBudget] = useState(budgetHistory[0]?.id);
   const [isUpdateDrawerOpen, setIsUpdateDrawerOpen] = useState(false);
   //TODO: Add state for isCapped here and fetcher get method to toggle isCapped state
-
+  const [isDetailedView, setIsDetailedView] = useState(false);
   const fetcher = useFetcher();
+
+  useEffect(() => {
+    recentTransactions.forEach(recordEvent);
+  }, [recentTransactions, recordEvent]);
+
+  const toggleChartView = () => {
+    setIsDetailedView(!isDetailedView);
+  };
 
   const handleRecordHistory = () => {
     fetcher.submit({ _action: "recordBudgetHistory" }, { method: "post" });
   };
-  useEffect(() => {
-    recentTransactions.forEach(recordEvent);
-  }, [recentTransactions, recordEvent]);
 
   const handleReplay = () => {
     if (isReplaying) {
@@ -150,7 +156,7 @@ export default function Dashboard() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-gray-900">
-            Welcome, {user.name}
+            Welcome, {user?.name}
           </h1>
         </div>
       </header>
@@ -184,17 +190,6 @@ export default function Dashboard() {
               Historical Performance
             </h2>
             <div className="flex gap-2">
-              <select
-                value={selectedBudget}
-                onChange={(e) => setSelectedBudget(e.target.value)}
-                className="mb-4 p-2 border rounded"
-              >
-                {budgetHistory.map((budget) => (
-                  <option key={budget.id} value={budget.id}>
-                    {budget.name}
-                  </option>
-                ))}
-              </select>
               <button
                 onClick={handleRecordHistory}
                 className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -208,13 +203,42 @@ export default function Dashboard() {
                 {fetcher.data.totalBudgets} budget entries.
               </p>
             )}
-            {selectedBudget && (
-              <BudgetHistoryChart
-                budgetHistory={budgetHistory.find(
-                  (b) => b.id === selectedBudget
-                )}
-              />
-            )}
+
+            <div className="flex justify-between items-center mb-4">
+              <select
+                value={selectedBudget}
+                onChange={(e) => setSelectedBudget(e.target.value)}
+                className="p-2 border rounded"
+              >
+                {budgetHistory.map((budget) => (
+                  <option key={budget.id} value={budget.id}>
+                    {budget.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={toggleChartView}
+                className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600"
+              >
+                {isDetailedView
+                  ? "Switch to Simple View"
+                  : "Switch to Detailed View"}
+              </button>
+            </div>
+            {selectedBudget &&
+              (isDetailedView ? (
+                <DetailedBudgetHistoryChart
+                  budgetHistory={budgetHistory.find(
+                    (b) => b.id === selectedBudget
+                  )}
+                />
+              ) : (
+                <BudgetHistoryChart
+                  budgetHistory={budgetHistory.find(
+                    (b) => b.id === selectedBudget
+                  )}
+                />
+              ))}
           </div>
 
           <div className="bg-white overflow-hidden shadow rounded-lg mb-6 mt-8">
