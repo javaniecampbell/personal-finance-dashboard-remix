@@ -45,6 +45,9 @@ export async function getBudgetHistory(userId: string, startDate: Date, endDate:
 
 export async function getBudgetHistoryByMonth(userId: string, startDate: Date, endDate: Date) {
   // Validate input dates
+
+  console.log('startDate', startDate);
+  console.log('endDate', endDate);
   if (!isValid(startDate) || !isValid(endDate)) {
     throw new Error('Invalid date range provided');
   }
