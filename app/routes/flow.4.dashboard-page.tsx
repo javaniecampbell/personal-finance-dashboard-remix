@@ -19,6 +19,10 @@ import {
   updateTransactionsBudgets,
 } from "~/utils/transactions.server";
 import { getUser } from "~/utils/user.server";
+import BudgetHistoryChart from "~/components/BudgetHistoryChart";
+import { startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { getBudgetHistory } from "~/utils/budgetHistory.server";
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userId = await requireUserId(request);
   const user = await getUser(userId);
@@ -26,6 +30,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const accountBalance = await getAccountBalance(userId);
   const budgetOverview = await getBudgetOverview(userId);
   const upcomingBills = await getUpcomingBills(userId);
+
+  const currentDate = new Date();
+  const startDate = startOfMonth(subMonths(currentDate, 3));
+  const endDate = endOfMonth(currentDate);
+
+  const budgetHistory = await getBudgetHistory(userId, startDate, endDate);
+
   const metrics = (await createSpan("fetch-metrics", async () => {
     // In a real application, you would fetch this data from your OpenTelemetry backend
     const mockMetrics = [
@@ -54,12 +65,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     });
   })) as { metrics: Metric[] };
   return json({
-    user,
-    recentTransactions,
     accountBalance,
+    budgetHistory,
     budgetOverview,
-    upcomingBills,
     metrics: metrics.metrics,
+    recentTransactions,
+    upcomingBills,
+    user,
   });
 };
 
@@ -78,10 +90,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Dashboard() {
   const {
-    user,
-    recentTransactions,
     accountBalance,
+    budgetHistory,
     budgetOverview,
+    recentTransactions,
+    user,
     upcomingBills,
   } = useLoaderData<typeof loader>();
 
@@ -93,6 +106,7 @@ export default function Dashboard() {
     currentReplayEvent,
   } = useReplay();
   const [balance, setBalance] = useState(accountBalance);
+  const [selectedBudget, setSelectedBudget] = useState(budgetHistory[0]?.id);
   const [isUpdateDrawerOpen, setIsUpdateDrawerOpen] = useState(false);
   //TODO: Add state for isCapped here and fetcher get method to toggle isCapped state
 
@@ -130,7 +144,8 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex flex-col gap-4">
-            <BudgetOverview budgetOverview={budgetOverview}  />
+            <BudgetOverview budgetOverview={budgetOverview} />
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <div className="bg-white overflow-hidden shadow rounded-lg">
                 <div className="px-4 py-5 sm:p-6">
@@ -148,9 +163,31 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-
           <div className="my-6">
             <BudgetDetailTable budgetOverview={budgetOverview} isChangeRate />
+          </div>
+          <div className="mt-8">
+            <h2 className="text-2xl font-semibold mb-4">
+              Historical Performance
+            </h2>
+            <select
+              value={selectedBudget}
+              onChange={(e) => setSelectedBudget(e.target.value)}
+              className="mb-4 p-2 border rounded"
+            >
+              {budgetHistory.map((budget) => (
+                <option key={budget.id} value={budget.id}>
+                  {budget.name}
+                </option>
+              ))}
+            </select>
+            {selectedBudget && (
+              <BudgetHistoryChart
+                budgetHistory={budgetHistory.find(
+                  (b) => b.id === selectedBudget
+                )}
+              />
+            )}
           </div>
 
           <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
