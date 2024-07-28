@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLoaderData, useNavigation, useFetcher } from "@remix-run/react";
 import { ActionFunctionArgs, json } from "@remix-run/node";
 import { requireUserId } from "~/utils/auth.server.v2";
@@ -89,19 +89,40 @@ export default function TransactionsPage() {
     sortBy,
     sortOrder,
     filterType,
-  } = useLoaderData();
+  } = useLoaderData<typeof loader>();
   const transition = useNavigation();
   const fetcher = useFetcher();
   const { addNotification } = useNotification();
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAddingTransaction, setIsAddingTransaction] = useState(false);
+  
+  const transactionList = fetcher?.data?.transactions || transactions;
+  const rtotalCount = fetcher?.data?.totalCount || totalCount;
+  const rpage = fetcher?.data?.page || page;
+  const rlimit = fetcher?.data?.limit || limit;
+  const rsortBy = fetcher?.data?.sortBy || sortBy;
+  const rsortOrder = fetcher?.data?.sortOrder || sortOrder;
+  const rfilterType = fetcher?.data?.filterType || filterType;
+  // const rtotalPages = Math.ceil(rtotalCount / rlimit);
+  const totalPages = Math.ceil(rtotalCount / rlimit);
+  const revalidate = () => {
+    if (document.visibilityState === "visible") {
+      fetcher.load("/flow/5/transactions-page");
+    }
+  };
 
-  const totalPages = Math.ceil(totalCount / limit);
+  useEffect(() => {
+    // Perform any actions needed when fetcher.data changes
+    document.addEventListener("visibilitychange", revalidate);
+    return () => {
+      document.removeEventListener("visibilitychange", revalidate);
+    };
+  }, []);
 
   const handleSort = (field) => {
     const newSortOrder =
-      field === sortBy && sortOrder === "asc" ? "desc" : "asc";
+      field === rsortBy && rsortOrder === "asc" ? "desc" : "asc";
     fetcher.submit(
       { sortBy: field, sortOrder: newSortOrder },
       { method: "get" }
@@ -109,6 +130,7 @@ export default function TransactionsPage() {
   };
 
   const handleFilter = (event) => {
+    event.preventDefault();
     fetcher.submit({ filterType: event.target.value }, { method: "get" });
   };
 
@@ -117,7 +139,7 @@ export default function TransactionsPage() {
     formData.append("file", file);
 
     try {
-      await fetcher.submit(formData, {
+      fetcher.submit(formData, {
         method: "post",
         encType: "multipart/form-data",
       });
@@ -145,10 +167,11 @@ export default function TransactionsPage() {
   };
   const handleAddTransaction = async (transactionData) => {
     try {
-      const result = await fetcher.submit(
+      await fetcher.submit(
         { ...transactionData, _action: "createTransaction" },
         { method: "post" }
       );
+      const result = fetcher.data;
       if (result.success) {
         addNotification("Transaction added successfully", "success");
         setIsAddingTransaction(false);
@@ -177,7 +200,7 @@ export default function TransactionsPage() {
         <div className="flex items-center">
           <Filter className="mr-2" />
           <select
-            value={filterType}
+            value={rfilterType}
             onChange={handleFilter}
             className="border rounded px-2 py-1"
           >
@@ -209,8 +232,14 @@ export default function TransactionsPage() {
             <tr>
               <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Date
-                <button onClick={() => handleSort("date")} className="ml-2">
-                  {sortBy === "date" && sortOrder === "asc" ? (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSort("date");
+                  }}
+                  className="ml-2"
+                >
+                  {rsortBy === "date" && rsortOrder === "asc" ? (
                     <SortAsc size={16} />
                   ) : (
                     <SortDesc size={16} />
@@ -222,8 +251,14 @@ export default function TransactionsPage() {
               </th>
               <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Amount
-                <button onClick={() => handleSort("amount")} className="ml-2">
-                  {sortBy === "amount" && sortOrder === "asc" ? (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSort("amount");
+                  }}
+                  className="ml-2"
+                >
+                  {rsortBy === "amount" && rsortOrder === "asc" ? (
                     <SortAsc size={16} />
                   ) : (
                     <SortDesc size={16} />
@@ -237,7 +272,7 @@ export default function TransactionsPage() {
             </tr>
           </thead>
           <tbody>
-            {transactions.map((transaction) => (
+            {transactionList?.map((transaction) => (
               <tr key={transaction.id}>
                 <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300">
                   {formatDate(transaction.date)}
@@ -248,7 +283,7 @@ export default function TransactionsPage() {
                 <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300">
                   <span
                     className={
-                      transaction.amount >= 0
+                      transaction.amount >= 0 && transaction.type === "income"
                         ? "text-green-600"
                         : "text-red-600"
                     }
@@ -275,8 +310,8 @@ export default function TransactionsPage() {
 
       <div className="mt-4 flex justify-between items-center">
         <div>
-          Showing {(page - 1) * limit + 1} to{" "}
-          {Math.min(page * limit, totalCount)} of {totalCount} transactions
+          Showing {(rpage - 1) * rlimit + 1} to{" "}
+          {Math.min(rpage * rlimit, rtotalCount)} of {rtotalCount} transactions
         </div>
         <div>
           <button
@@ -290,9 +325,9 @@ export default function TransactionsPage() {
           </button>
           <button
             onClick={() =>
-              fetcher.submit({ page: page + 1 }, { method: "get" })
+              fetcher.submit({ page: rpage + 1 }, { method: "get" })
             }
-            disabled={page === totalPages}
+            disabled={rpage === totalPages}
             className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r"
           >
             Next
@@ -324,6 +359,11 @@ export default function TransactionsPage() {
             <p>
               <strong>Category:</strong> {selectedTransaction.category}
             </p>
+
+            <p>
+              <strong>Type:</strong> {selectedTransaction.type}
+            </p>
+
             {/* Add more details as needed */}
           </div>
         ) : (
