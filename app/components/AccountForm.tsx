@@ -22,6 +22,18 @@ export function AccountForm({ account, onSubmit }) {
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
         </div>
+    
+        <div>
+          <label htmlFor="accountNumber" className="block text-sm font-medium text-gray-700">Account Number</label>
+          <input
+            type="text"
+            name="accountNumber"
+            id="accountNumber"
+            defaultValue={account?.accountNumber}
+            required
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+        </div>
 
         <div>
           <label htmlFor="type" className="block text-sm font-medium text-gray-700">Account Type</label>
@@ -34,7 +46,7 @@ export function AccountForm({ account, onSubmit }) {
           >
             <option value="CHECKING">Checking</option>
             <option value="SAVINGS">Savings</option>
-            <option value="CREDIT_CARD">Credit Card</option>
+            <option value="CREDIT">Credit Card</option>
             <option value="INVESTMENT">Investment</option>
           </select>
         </div>
@@ -48,6 +60,30 @@ export function AccountForm({ account, onSubmit }) {
             defaultValue={account?.balance || 0}
             step="0.01"
             required
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="bankName" className="block text-sm font-medium text-gray-700">Bank</label>
+          <input
+            type="text"
+            name="bankName"
+            id="bankName"
+            defaultValue={account?.bankName || ''}
+            required={false}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="branchName" className="block text-sm font-medium text-gray-700">Branch</label>
+          <input
+            type="text"
+            name="branchName"
+            id="branchName"
+            defaultValue={account?.branchName || ''}
+            required={false}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
         </div>
