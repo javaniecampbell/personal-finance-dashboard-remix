@@ -1,17 +1,34 @@
 import { ActionFunctionArgs, json, LoaderFunctionArgs } from "@remix-run/node";
 import { Link, useFetcher, useLoaderData } from "@remix-run/react";
+import {
+  endOfMonth,
+  isValid,
+  parseISO,
+  startOfMonth,
+  subMonths,
+} from "date-fns";
 import { Pause, Play, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import BudgetDetailTable from "~/components/BudgetDetailTable";
+import BudgetHistoryChart from "~/components/BudgetHistoryChart";
 import BudgetOverview from "~/components/BudgetOverview.v2";
 import { UpcomingBills } from "~/components/DashboardComponents";
-import UpdateTransactionsDrawer from "~/components/UpdateTransactionsDrawer";
+import { DateRangePicker } from "~/components/DateRangePicker";
+import DetailedBudgetHistoryChart from "~/components/DetailedBudgetHistoryChart";
+import { useNotification } from "~/components/ErrorNotification";
 import TransactionList from "~/components/TransactionList";
+import UpdateTransactionsDrawer from "~/components/UpdateTransactionsDrawer";
 import { useReplay } from "~/hooks/useReplay";
 import { DateRangeResult, Metric } from "~/types";
+import { getAccounts } from "~/utils/accounts.server";
 import { requireUserId } from "~/utils/auth.server.v2";
 import { getUpcomingBills } from "~/utils/bills.server";
+import {
+  getBudgetHistoryByMonth,
+  recordBudgetHistory,
+} from "~/utils/budgetHistory.server";
 import { getBudgetOverview } from "~/utils/budgets.server";
+import { formatCurrency } from "~/utils/formatters";
 import { createSpan } from "~/utils/tracing.server";
 import {
   getAccountBalance,
@@ -19,24 +36,6 @@ import {
   updateTransactionsBudgets,
 } from "~/utils/transactions.server";
 import { getUser } from "~/utils/user.server";
-import BudgetHistoryChart from "~/components/BudgetHistoryChart";
-import {
-  startOfMonth,
-  endOfMonth,
-  subMonths,
-  parseISO,
-  isValid,
-  add,
-} from "date-fns";
-import {
-  getBudgetHistory,
-  getBudgetHistoryByMonth,
-  recordBudgetHistory,
-} from "~/utils/budgetHistory.server";
-import DetailedBudgetHistoryChart from "~/components/DetailedBudgetHistoryChart";
-import { DateRangePicker } from "~/components/DateRangePicker";
-import { useNotification } from "~/components/ErrorNotification";
-import { ca } from "date-fns/locale";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userId = await requireUserId(request);
@@ -45,6 +44,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const accountBalance = await getAccountBalance(userId);
   const budgetOverview = await getBudgetOverview(userId);
   const upcomingBills = await getUpcomingBills(userId);
+  const accounts = await getAccounts(userId);
+  const totalBalance = accounts.reduce(
+    (sum, account) => sum + account.balance,
+    0
+  );
 
   const url = new URL(request.url);
   const currentDate = new Date();
@@ -52,7 +56,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     ? new Date(url.searchParams.get("startDate")!)
     : startOfMonth(subMonths(currentDate, 3));
   const endDate = url.searchParams.get("endDate")
-    ? new Date(url.searchParams.get("endDate"))
+    ? new Date(url.searchParams.get("endDate")!)
     : endOfMonth(currentDate);
 
   const budgetHistory = await getBudgetHistoryByMonth(
@@ -95,6 +99,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     });
   })) as { metrics: Metric[] };
   return json({
+    accounts,
     accountBalance,
     budgetHistory,
     budgetOverview,
@@ -102,6 +107,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     recentTransactions,
     upcomingBills,
     user,
+    totalBalance,
     startDate: startDate.toISOString(),
     endDate: endDate.toISOString(),
   });
@@ -127,14 +133,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Dashboard() {
   const {
+    accounts,
     accountBalance,
     budgetHistory,
     budgetOverview,
+    endDate,
     recentTransactions,
+    totalBalance,
     user,
     upcomingBills,
     startDate,
-    endDate,
   } = useLoaderData<typeof loader>();
 
   const {
@@ -146,7 +154,7 @@ export default function Dashboard() {
   } = useReplay();
 
   const { addNotification } = useNotification();
-  const [balance, setBalance] = useState(accountBalance);
+  const [balance, setBalance] = useState(totalBalance ?? accountBalance);
   const [isUpdateDrawerOpen, setIsUpdateDrawerOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState(budgetHistory[0]?.id);
   //TODO: Add state for isCapped here and fetcher get method to toggle isCapped state
@@ -267,7 +275,7 @@ export default function Dashboard() {
                     Current Balance
                   </h2>
                   <p className="mt-1 text-3xl font-semibold text-gray-900">
-                    ${balance?.toFixed(2)}
+                    {formatCurrency(balance)}
                   </p>
                 </div>
               </div>
@@ -408,6 +416,80 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+          {/* Accounts Overview Section  */}
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6">
+            <h2 className="text-lg font-medium text-gray-900">
+              Accounts Overview
+            </h2>
+            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+              Total Balance: ${totalBalance.toFixed(2)}
+            </p>
+            <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {accounts === undefined || (accounts && accounts.length === 0) ? (
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="p-5">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        {/* Add an icon based on account type */}
+                      </div>
+                      <div className="ml-5 w-0 flex-1">
+                        <dl>
+                          <dt className="text-sm font-medium text-gray-500 truncate">
+                            No accounts found
+                          </dt>
+                        </dl>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 px-5 py-3">
+                    <div className="text-sm">
+                      <Link
+                        to="/accounts/new"
+                        className="font-medium text-indigo-600 hover:text-indigo-500"
+                      >
+                        Add an account
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                accounts?.map((account) => (
+                  <div
+                    key={account.id}
+                    className="bg-white overflow-hidden shadow rounded-lg"
+                  >
+                    <div className="p-5">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          {/* Add an icon based on account type */}
+                        </div>
+                        <div className="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt className="text-sm font-medium text-gray-500 truncate">
+                              {account.name}
+                            </dt>
+                            <dd className="text-lg font-medium text-gray-900">
+                              ${account.balance.toFixed(2)}
+                            </dd>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 px-5 py-3">
+                      <div className="text-sm">
+                        <a
+                          href={`/accounts/${account.id}`}
+                          className="font-medium text-indigo-600 hover:text-indigo-500"
+                        >
+                          View details
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white overflow-hidden shadow rounded-lg">
