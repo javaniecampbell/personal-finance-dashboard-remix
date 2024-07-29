@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useLoaderData, useFetcher } from '@remix-run/react';
 import { json, LoaderFunction, ActionFunction } from '@remix-run/node';
-import { requireUserId } from '~/utils/auth.server';
+import { requireUserId } from '~/utils/auth.server.v2';
 import { getAccounts, createAccount, updateAccount, deleteAccount } from '~/utils/accounts.server';
 import { AccountList } from '~/components/AccountList';
 import { AccountForm } from '~/components/AccountForm';
