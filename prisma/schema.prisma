@@ -181,7 +181,7 @@ model Account {
   xata_createdat DateTime      @default(now()) @db.Timestamptz(6)
   xata_updatedat DateTime      @default(now()) @db.Timestamptz(6)
   user           User          @relation(fields: [userId], references: [id])
-  Transaction    Transaction[]
+  transactions   Transaction[]
 }
 
 enum Theme {
