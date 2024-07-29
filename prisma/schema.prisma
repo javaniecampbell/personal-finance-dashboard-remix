@@ -168,9 +168,12 @@ model FAQ {
 }
 
 model Account {
-  id             String        @id @default(uuid())
+  id             String        @id @default(cuid())
   userId         String
   name           String
+  accountNumber  String
+  bankName       String?
+  branchName     String?
   type           AccountType
   balance        Float
   currency       String        @default("USD")
