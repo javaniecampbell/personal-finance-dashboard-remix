@@ -1,4 +1,4 @@
-import type { Account, Transaction } from "~/types";
+import type { Account, Transaction, TransactionType } from "~/types";
 import { db } from "./db.server";
 
 export async function getTransactions(userId: string, options: {
@@ -30,29 +30,103 @@ export async function getTransactions(userId: string, options: {
 }
 
 export async function createTransaction(userId: string, transactionData: {
+  budgetId?: string;
   description: string;
   amount: number;
   date: Date;
   category: string;
-  type: 'income' | 'expense';
+  type: TransactionType;
+  accountId: string;
+  toAccountId?: string;
 }) {
   const { budgetId, ...data } = transactionData;
 
-  // Find the appropriate budget based on the transaction's category
-  const budget = await db.budget.findFirst({
-    where: {
-      userId,
-      category: data.category,
-    },
-  });
+  if (data.type === 'transfer') {
+    // SCENARIO: 1. Transfer between two accounts of the same user
 
-  return db.transaction.create({
-    data: {
-      ...data,
-      user: { connect: { id: userId } },
-      budget: budget ? { connect: { id: budget?.id } } : undefined, // Link the transaction to the budget if it exists
-    },
-  });
+    // SCENARIO: 2. Transfer from an account to a budget
+    // SCENARIO: 3. Transfer from a budget to an account
+    // SCENARIO: 4. Transfer between two budgets
+    // SCENARIO: 5. Transfer between two users
+    // SCENARIO: 6. Transfer from a user to a budget
+    // SCENARIO: 7. Transfer from a budget to a user
+    // SCENARIO: 8. Transfer between two users and a budget
+    // SCENARIO: 9. Transfer between two budgets and a user
+    // SCENARIO: 10. Transfer between two users and two budgets
+    // SCENARIO: 11. Transfer between two budgets and two users
+    // PRIORITY: 12. Transfer between two accounts of the same user and a budget
+
+    // Create two transactions for transfer
+    const [fromTransaction, toTransaction] = await db.$transaction([
+      db.transaction.create({
+        data: {
+          type: 'expense',
+          amount: -data.amount,
+          description: data.description,
+          date: new Date(data.date),
+          category: 'Transfer',
+          user: { connect: { id: userId } },
+          account: { connect: { id: data.accountId } },
+        },
+      }),
+      db.transaction.create({
+        data: {
+          type: 'income',
+          amount: data.amount,
+          description: data.description,
+          date: new Date(data.date),
+          category: 'Transfer',
+          user: { connect: { id: userId } },
+          account: { connect: { id: data.toAccountId } },
+        },
+      }),
+    ]);
+
+    // Update account balances
+    await db.$transaction([
+      db.account.update({
+        where: { id: data.accountId },
+        data: { balance: { decrement: data.amount } },
+      }),
+      db.account.update({
+        where: { id: data.toAccountId },
+        data: { balance: { increment: data.amount } },
+      }),
+    ]);
+
+    return { fromTransaction, toTransaction };
+
+  } else {
+
+    // Find the appropriate budget based on the transaction's category
+    const budget = await db.budget.findFirst({
+      where: {
+        userId,
+        category: data.category,
+      },
+    });
+
+    const transaction = await db.transaction.create({
+      data: {
+        ...data,
+        user: { connect: { id: userId } },
+        budget: budget ? { connect: { id: budget?.id } } : budgetId !== undefined ? budgetId : undefined : undefined, // Link the transaction to the budget if it exists
+        account: { connect: { id: data.accountId } },
+      },
+    });
+
+    // Update account balance
+    await db.account.update({
+      where: { id: data.accountId, userId },
+      data: {
+        balance: data.type === 'expense'
+          ? { decrement: data.amount }
+          : { increment: data.amount },
+      },
+    });
+
+    return transaction;
+  }
 }
 
 export async function updateTransactionsBudgets(userId: string) {
