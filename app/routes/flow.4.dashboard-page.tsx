@@ -556,6 +556,12 @@ export default function Dashboard() {
                         >
                           View Analytics
                         </Link>
+                        <Link
+                          to="/accounts"
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 last:col-span-2 last:justify-center"
+                        >
+                          Manage Accounts
+                        </Link>
                       </div>
                       <div className="mt-4 grid">
                         <button
