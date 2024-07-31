@@ -1,6 +1,6 @@
 import { db } from "~/utils/db.server";
 import type { Account } from "@prisma/client";
-import { TransactionType } from "~/types";
+import { validateAccount } from "./account.validation.server";
 
 export async function getAccounts(userId: string) {
   return db.account.findMany({
@@ -10,6 +10,10 @@ export async function getAccounts(userId: string) {
 }
 
 export async function createAccount(userId: string, accountData: Omit<Account, "id" | "userId">) {
+  const validationResult = validateAccount(accountData);
+  if (!validationResult.success) {
+    throw new Error(validationResult.error.message);
+  }
   return db.account.create({
     data: {
       ...accountData,
@@ -18,10 +22,18 @@ export async function createAccount(userId: string, accountData: Omit<Account, "
   });
 }
 
-export async function updateAccount(accountId: string, accountData: Partial<Account>) {
+export async function updateAccount(userId: string, accountId: string, accountData: Partial<Account>) {
+
+  const validationResult = validateAccount(accountData);
+
+  if (!validationResult.success) {
+    throw new Error(validationResult.error.message);
+  }
+
+
   return db.account.update({
-    where: { id: accountId },
-    data: accountData,
+    where: { id: accountId, userId },
+    data: validateAccount.data,
   });
 }
 
