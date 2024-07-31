@@ -102,6 +102,7 @@ model Budget {
   user           User            @relation(fields: [userId], references: [id])
   history        BudgetHistory[]
   transactions   Transaction[]
+  accounts       Account[]
 }
 
 model Bill {
@@ -185,6 +186,8 @@ model Account {
   xata_updatedat DateTime      @default(now()) @db.Timestamptz(6)
   user           User          @relation(fields: [userId], references: [id])
   transactions   Transaction[]
+  budget         Budget?       @relation(fields: [budgetId], references: [id])
+  budgetId       String?
 }
 
 enum Theme {
