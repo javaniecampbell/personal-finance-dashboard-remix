@@ -42,7 +42,8 @@ export async function getAccountBalance(accountId: string) {
   }
 
   const balance = account.transactions.reduce((sum, transaction) => {
-    return transaction.type === 'INCOME' as TransactionType ? sum + transaction.amount : sum - transaction.amount;
+    // return transaction.type === 'INCOME' ? sum + transaction.amount : sum - transaction.amount;
+    return transaction.type === 'income' ? sum + transaction.amount : sum - transaction.amount;
   }, 0);
 
   return balance;
