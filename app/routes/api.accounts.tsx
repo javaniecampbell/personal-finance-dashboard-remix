@@ -21,14 +21,14 @@ export const action: ActionFunction = async ({ request }) => {
   const userId = await requireUserId(request);
   const formData = await request.formData();
   const { _action, ...values } = Object.fromEntries(formData);
-
+  const accountId = values.id as string;
   switch (_action) {
     case "create":
       return json(await createAccount(userId, values));
     case "update":
-      return json(await updateAccount(values.id as string, values));
+      return json(await updateAccount(userId, accountId, values));
     case "delete":
-      return json(await deleteAccount(values.id as string));
+      return json(await deleteAccount(accountId));
     default:
       return json({ error: "Invalid action" }, { status: 400 });
   }
