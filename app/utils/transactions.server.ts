@@ -7,11 +7,15 @@ export async function getTransactions(userId: string, options: {
   sortBy: string;
   sortOrder: 'asc' | 'desc';
   filterType: string;
+  accountId?: string;
 }) {
   const { page, limit, sortBy, sortOrder, filterType } = options;
   const skip = (page - 1) * limit;
 
-  const where = { userId };
+  const where = {
+    userId,
+    ...(options.accountId ? { accountId: options.accountId } : {})
+  };
   if (filterType !== 'all') {
     where.type = filterType;
   }
@@ -22,6 +26,7 @@ export async function getTransactions(userId: string, options: {
       orderBy: { [sortBy]: sortOrder },
       skip,
       take: limit,
+      include: { account: true },
     }),
     db.transaction.count({ where }),
   ]);
@@ -214,6 +219,7 @@ export async function getRecentTransactions(userId: string, limit: number = 5): 
     where: { userId },
     orderBy: { date: 'desc' },
     take: limit,
+    include: { account: true },
   });
 }
 
