@@ -115,7 +115,7 @@ export async function createTransaction(userId: string, transactionData: {
       data: {
         ...data,
         user: { connect: { id: userId } },
-        budget: budget ? { connect: { id: budget?.id } } : budgetId !== undefined ? budgetId : undefined : undefined, // Link the transaction to the budget if it exists
+        budget: budget ? { connect: { id: budget?.id ?? budgetId } } : undefined, // Link the transaction to the budget if it exists
         account: { connect: { id: data.accountId } },
       },
     });
