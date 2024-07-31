@@ -6,6 +6,7 @@ export async function getBudgets(userId: string) {
   return db.budget.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
+    include: { accounts: true }
   });
 }
 
@@ -14,11 +15,13 @@ export async function createBudget(userId: string, data: {
   amount: number;
   category: string;
   period: 'weekly' | 'monthly' | 'yearly';
+  accountIds: string[];
 }) {
   return db.budget.create({
     data: {
       ...data,
       user: { connect: { id: userId } },
+      accounts: { connect: data.accountIds.map(id => ({ id })) },
     },
   });
 }
@@ -28,10 +31,17 @@ export async function updateBudget(userId: string, budgetId: string, data: {
   amount?: number;
   category?: string;
   period?: 'weekly' | 'monthly' | 'yearly';
+  accountIds?: string[];
 }) {
+  const { accountIds, ...budgetData } = data;
   return db.budget.update({
     where: { id: budgetId, userId },
-    data,
+    data: {
+      ...budgetData,
+      accounts: accountIds ? {
+        set: accountIds.map(id => ({ id })),
+      } : undefined,
+    }
   });
 }
 
@@ -47,6 +57,7 @@ export async function getBudgetPerformance(userId: string, isCapped: boolean = f
   const budgets = await db.budget.findMany({
     where: { userId },
     include: {
+      accounts: true,
       transactions: {
         where: {
           date: {
@@ -54,6 +65,7 @@ export async function getBudgetPerformance(userId: string, isCapped: boolean = f
             gte: startOfMonth,
             lt: endOfMonth,
           },
+          type: 'expense', // Only consider expenses for budget tracking
         },
       },
     },
@@ -101,8 +113,11 @@ export async function getBudgetPerformance(userId: string, isCapped: boolean = f
       budgetedAmount: budget.amount,
       actualAmount,
       performance,
-    } satisfies BudgetPerformance;
-  }) satisfies BudgetPerformance[];
+      accounts: budget.accounts,
+    } //satisfies BudgetPerformance
+      ;
+  }) //satisfies BudgetPerformance[]
+    ;
 }
 
 // app/utils/budgets.server.ts
