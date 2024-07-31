@@ -2,6 +2,13 @@ import { db } from "~/utils/db.server";
 import type { Account } from "@prisma/client";
 import { validateAccount } from "./account.validation.server";
 
+export async function getAccount(userId: string, accountId: string) {
+  return db.account.findFirst({
+    where: { id: accountId, userId },
+    include: { transactions: true },
+  });
+}
+
 export async function getAccounts(userId: string) {
   return db.account.findMany({
     where: { userId },
