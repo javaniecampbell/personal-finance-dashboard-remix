@@ -3,7 +3,8 @@ import { z } from 'zod';
 
 export const accountSchema = z.object({
   name: z.string().min(1, "Account name is required").max(100, "Account name must be 100 characters or less"),
-  type: z.enum(['CHECKING', 'SAVINGS', 'CREDIT_CARD', 'INVESTMENT']),
+  // type: z.enum(['CHECKING', 'SAVINGS', 'CREDIT_CARD', 'INVESTMENT']),
+  type: z.enum(['checking', 'savings', 'credit', 'investment']),
   balance: z.number().min(0, "Balance must be a positive number"),
 });
 
