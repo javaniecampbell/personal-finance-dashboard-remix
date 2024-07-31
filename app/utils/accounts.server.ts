@@ -1,5 +1,6 @@
 import { db } from "~/utils/db.server";
 import type { Account } from "@prisma/client";
+import { TransactionType } from "~/types";
 
 export async function getAccounts(userId: string) {
   return db.account.findMany({
@@ -41,7 +42,7 @@ export async function getAccountBalance(accountId: string) {
   }
 
   const balance = account.transactions.reduce((sum, transaction) => {
-    return transaction.type === 'INCOME' ? sum + transaction.amount : sum - transaction.amount;
+    return transaction.type === 'INCOME' as TransactionType ? sum + transaction.amount : sum - transaction.amount;
   }, 0);
 
   return balance;
