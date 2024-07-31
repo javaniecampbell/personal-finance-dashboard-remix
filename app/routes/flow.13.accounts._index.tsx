@@ -17,21 +17,21 @@ export const action: ActionFunction = async ({ request }) => {
   const userId = await requireUserId(request);
   const formData = await request.formData();
   const { _action, ...values } = Object.fromEntries(formData);
-
+  const accountId: string = values.id as string;
   switch (_action) {
     case "create":
       return json(await createAccount(userId, values));
     case "update":
-      return json(await updateAccount(values.id, values));
+      return json(await updateAccount(accountId, values));
     case "delete":
-      return json(await deleteAccount(values.id));
+      return json(await deleteAccount(accountId));
     default:
       return json({ error: "Invalid action" }, { status: 400 });
   }
 };
 
 export default function AccountManagement() {
-  const { accounts } = useLoaderData();
+  const { accounts } = useLoaderData<typeof loader>();
   const [editingAccount, setEditingAccount] = useState(null);
   const fetcher = useFetcher();
 
