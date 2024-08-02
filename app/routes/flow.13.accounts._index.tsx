@@ -25,7 +25,18 @@ export const action: ActionFunction = async ({ request }) => {
   const accountId: string = values.id as string;
   switch (_action) {
     case "create":
-      return json(await createAccount(userId, values));
+      return json(
+        await createAccount(userId, {
+          ...values,
+          name: values.name.toString(),
+          type: values.type.toString(),
+          balance: parseFloat(values.balance),
+          // currency: values.currency.toString(),
+          accountNumber: values.accountNumber.toString(),
+          bankName: values.bankName.toString(),
+          branchName: values.branchName.toString(),
+        })
+      );
     case "update":
       return json(await updateAccount(userId, accountId, values));
     case "delete":
