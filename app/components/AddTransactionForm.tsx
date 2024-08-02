@@ -18,6 +18,8 @@ const AddTransactionForm: React.FC<{
       category: "",
       date: new Date().toISOString().split("T")[0],
       type: "expense",
+      accountId: "",
+      toAccountId: "",
     },
     {
       description: { required: "Description is required" },
@@ -27,7 +29,10 @@ const AddTransactionForm: React.FC<{
       },
       category: { required: "Category is required" },
       date: { required: "Date is required" },
-    }
+      accountId: { required: "Account is required" },
+      // toAccountId: { required: "To Account is required", when: (values) => values.type === "transfer" },
+    },
+
   );
 
   const handleFormSubmit = (e) => {
@@ -50,7 +55,10 @@ const AddTransactionForm: React.FC<{
             id="type"
             name="type"
             value={values.type}
-            onChange={handleChange}
+            onChange={(e) => {
+              setIsTransfer(e.target.value === "transfer");
+              handleChange(e);
+            }}
             className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
           >
             <option value="expense">Expense</option>
@@ -130,6 +138,7 @@ const AddTransactionForm: React.FC<{
             id="accountId"
             name="accountId"
             required
+            value={values.accountId}
             className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
             onChange={(e) => {
               e.preventDefault();
@@ -160,6 +169,8 @@ const AddTransactionForm: React.FC<{
               id="toAccountId"
               name="toAccountId"
               required
+              onChange={handleChange}
+              value={values.toAccountId}
               className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
             >
               {accounts?.map((account) => (
