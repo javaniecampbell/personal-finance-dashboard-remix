@@ -35,6 +35,7 @@ export type Transaction = {
   category: string;
   date: Date;
   type: TransactionType
+  account?: Account;
 };
 
 
