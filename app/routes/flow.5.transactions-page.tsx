@@ -102,7 +102,7 @@ export default function TransactionsPage() {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAddingTransaction, setIsAddingTransaction] = useState(false);
-  
+
   const transactionList = fetcher?.data?.transactions || transactions;
   const rtotalCount = fetcher?.data?.totalCount || totalCount;
   const rpage = fetcher?.data?.page || page;
@@ -178,11 +178,11 @@ export default function TransactionsPage() {
         { method: "post" }
       );
       const result = fetcher.data;
-      if (result.success) {
+      if (result.success === true) {
         addNotification("Transaction added successfully", "success");
         setIsAddingTransaction(false);
         // setIsAddFormOpen(false);
-      } else {
+      } else if (result.error !== undefined) {
         setIsAddingTransaction(true);
         addNotification(result.error, "error");
       }
@@ -375,7 +375,7 @@ export default function TransactionsPage() {
         ) : (
           isAddingTransaction === true && (
             <AddTransactionForm
-            accounts={accounts}
+              accounts={accounts}
               onSubmit={handleAddTransaction}
               onClose={handleCloseDrawer}
             />
