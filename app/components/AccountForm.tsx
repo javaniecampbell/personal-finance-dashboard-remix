@@ -44,10 +44,10 @@ export function AccountForm({ account, onSubmit }) {
             required
             className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
           >
-            <option value="CHECKING">Checking</option>
-            <option value="SAVINGS">Savings</option>
-            <option value="CREDIT">Credit Card</option>
-            <option value="INVESTMENT">Investment</option>
+            <option value="checking">Checking</option>
+            <option value="savings">Savings</option>
+            <option value="credit">Credit Card</option>
+            <option value="investment">Investment</option>
           </select>
         </div>
 
