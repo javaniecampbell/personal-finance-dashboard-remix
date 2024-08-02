@@ -17,7 +17,14 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
   const [account, transactions] = await Promise.all([
     getAccount(userId, accountId),
-    getTransactions(userId, { accountId }),
+    getTransactions(userId, {
+      accountId,
+      limit: 10,
+      filterType: "all",
+      sortBy: "date",
+      page: 1,
+      sortOrder: "desc",
+    }),
   ]);
 
   if (!account) {
@@ -28,15 +35,19 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 };
 
 export default function AccountDetailPage() {
-  const { account, transactions } = useLoaderData();
+  const { account, transactions } = useLoaderData<typeof loader>();
   const { accountId } = useParams();
 
   return (
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Account Details</h1>
-      <AccountDetails account={account} />
+      <h1 className="text-2xl font-semibold text-gray-900 mb-6">{`Account Details ${
+        accountId ? "| " + accountId : ""
+      } `}</h1>
+      <AccountDetails account={account} transactions={transactions} />
       <div className="mt-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Transaction History</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Transaction History
+        </h2>
         <TransactionList transactions={transactions} />
       </div>
     </div>
