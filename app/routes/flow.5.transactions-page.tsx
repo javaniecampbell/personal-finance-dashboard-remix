@@ -13,6 +13,7 @@ import SideDrawer from "~/components/SideDrawer";
 import { formatDate, formatCurrency } from "~/utils/formatters";
 import { Filter, SortAsc, SortDesc, FileUp, Info, Plus } from "lucide-react";
 import AddTransactionForm from "~/components/AddTransactionForm";
+import { getAccounts } from "~/utils/accounts.server";
 
 export const loader = async ({ request }) => {
   const userId = await requireUserId(request);
@@ -23,6 +24,7 @@ export const loader = async ({ request }) => {
   const sortOrder = url.searchParams.get("sortOrder") || "desc";
   const filterType = url.searchParams.get("filterType") || "all";
 
+  const accounts = await getAccounts(userId);
   const { transactions, totalCount } = await getTransactions(userId, {
     page,
     limit,
@@ -32,6 +34,7 @@ export const loader = async ({ request }) => {
   });
 
   return json({
+    accounts,
     transactions,
     totalCount,
     page,
@@ -56,6 +59,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         date: new Date(values?.date as string),
         category: values.category as string,
         type: values.type as "income" | "expense",
+        accountId: values.accountId as string,
+        toAccountId: values.toAccountId as string,
       };
       const newTransaction = await createTransaction(userId, formData);
       return json({ success: true, transaction: newTransaction });
@@ -82,6 +87,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function TransactionsPage() {
   const {
+    accounts,
     transactions,
     totalCount,
     page,
@@ -369,6 +375,7 @@ export default function TransactionsPage() {
         ) : (
           isAddingTransaction === true && (
             <AddTransactionForm
+            accounts={accounts}
               onSubmit={handleAddTransaction}
               onClose={handleCloseDrawer}
             />
