@@ -5,6 +5,6 @@ export function loader({ request }: LoaderFunctionArgs) {
     headers: { "Cache-Control": "no-store" },
   });
 }
-export function AccountsPage() {
+export function HelpAndSupportPage() {
   return null;
 }
