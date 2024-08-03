@@ -178,17 +178,17 @@ export default function TransactionsPage() {
         { method: "post" }
       );
       const result = fetcher.data;
-      if (result.success === true) {
+      if (result !== undefined && result?.success === true) {
         addNotification("Transaction added successfully", "success");
         setIsAddingTransaction(false);
         // setIsAddFormOpen(false);
-      } else if (result.error !== undefined) {
+      } else if (result !== undefined && result?.error !== undefined) {
         setIsAddingTransaction(true);
         addNotification(result.error, "error");
       }
     } catch (error) {
       addNotification("Failed to add transaction", "error");
-      setIsAddingTransaction(false);
+      setIsAddingTransaction(true);
     }
   };
 
