@@ -1,17 +1,36 @@
-import React, { useState } from "react";
+import React, { FormEvent, useState } from "react";
 import { Form, useNavigation } from "@remix-run/react";
 import { useFormState } from "~/hooks/useFormState";
-import { Account, Transaction } from "~/types";
+import { Account } from "~/types";
 import { TRANSACTION_CATEGORIES } from "~/constants/categories";
+
+type CreateTransaction = {
+  description: string;
+  amount: string;
+  category: string;
+  date: string;
+  type: string;
+  accountId?: string;
+  toAccountId?: string;
+};
 
 const AddTransactionForm: React.FC<{
   accounts?: Account[];
-  onSubmit: (transactionData: Transaction) => void;
+  onSubmit: (transactionData: CreateTransaction) => void;
   onClose: () => void;
 }> = ({ onSubmit, onClose, accounts }) => {
   const transition = useNavigation();
   const [isTransfer, setIsTransfer] = useState(false);
-  const { values, handleChange, handleSubmit, errors } = useFormState(
+  const {
+    values,
+    handleChange,
+    handleSubmit,
+    errors,
+    isValid,
+    resetForm,
+    handleBlur,
+    touched,
+  } = useFormState<CreateTransaction>(
     {
       description: "",
       amount: "",
@@ -22,23 +41,40 @@ const AddTransactionForm: React.FC<{
       toAccountId: "",
     },
     {
-      description: { required: "Description is required" },
+      type: {
+        required: { value: true, message: "Type is required" },
+      },
+      description: {
+        required: { value: true, message: "Description is required" },
+      },
       amount: {
-        required: "Amount is required",
+        required: { value: true, message: "Amount is required" },
         pattern: { value: /^\d+(\.\d{1,2})?$/, message: "Invalid amount" },
       },
-      category: { required: "Category is required" },
-      date: { required: "Date is required" },
-      accountId: { required: "Account is required" },
-      // toAccountId: { required: "To Account is required", when: (values) => values.type === "transfer" },
-    },
-
+      category: {
+        required: { value: true, message: "Category is required" },
+        when: (values) => values.type !== "transfer",
+      },
+      date: {
+        required: { value: true, message: "Date is required" },
+      },
+      accountId: {
+        required: { value: true, message: "Account is required" },
+      },
+      toAccountId: {
+        required: { value: true, message: "To Account is required" },
+        when: (values) => values.type === "transfer",
+      },
+    }
   );
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     handleSubmit(onSubmit)(e);
-    onClose();
+    if (JSON.stringify(errors) === "{}") {
+      resetForm();
+      onClose();
+    }
   };
 
   return (
@@ -54,18 +90,21 @@ const AddTransactionForm: React.FC<{
           <select
             id="type"
             name="type"
+            required
             value={values.type}
+            onBlur={handleBlur}
             onChange={(e) => {
               setIsTransfer(e.target.value === "transfer");
               handleChange(e);
             }}
             className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
           >
+            <option value="">Select a transaction type</option>
             <option value="expense">Expense</option>
             <option value="income">Income</option>
             <option value="transfer">Transfer</option>
           </select>
-          {errors.type && (
+          {touched.type && errors.type && (
             <p className="mt-2 text-sm text-red-600">{errors.type}</p>
           )}
         </div>
@@ -81,11 +120,12 @@ const AddTransactionForm: React.FC<{
             id="amount"
             name="amount"
             value={values.amount}
+            onBlur={handleBlur}
             onChange={handleChange}
             step="0.01"
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
-          {errors.amount && (
+          {touched.amount && errors.amount && (
             <p className="mt-2 text-sm text-red-600">{errors.amount}</p>
           )}
         </div>
@@ -100,11 +140,13 @@ const AddTransactionForm: React.FC<{
             type="text"
             id="description"
             name="description"
+            required
             value={values.description}
+            onBlur={handleBlur}
             onChange={handleChange}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
-          {errors.description && (
+          {touched.description && errors.description && (
             <p className="mt-2 text-sm text-red-600">{errors.description}</p>
           )}
         </div>
@@ -119,11 +161,13 @@ const AddTransactionForm: React.FC<{
             type="date"
             id="date"
             name="date"
+            required
             value={values.date}
+            onBlur={handleBlur}
             onChange={handleChange}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
-          {errors.date && (
+          {touched.date && errors.date && (
             <p className="mt-2 text-sm text-red-600">{errors.date}</p>
           )}
         </div>
@@ -139,20 +183,22 @@ const AddTransactionForm: React.FC<{
             name="accountId"
             required
             value={values.accountId}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indig
+            onBlur={handleBlur}o-500 sm:text-sm rounded-md"
             onChange={(e) => {
               e.preventDefault();
               setIsTransfer(e.target.value === "transfer");
               handleChange(e);
             }}
           >
+            <option value="">Select an account</option>
             {accounts?.map((account) => (
               <option key={account.id} value={account.id}>
                 {account.name}
               </option>
             ))}
           </select>
-          {errors.accountId && (
+          {touched.accountId && errors.accountId && (
             <p className="mt-2 text-sm text-red-600">{errors.accountId}</p>
           )}
         </div>
@@ -169,16 +215,21 @@ const AddTransactionForm: React.FC<{
               id="toAccountId"
               name="toAccountId"
               required
+              onBlur={handleBlur}
               onChange={handleChange}
               value={values.toAccountId}
               className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
             >
+              <option value="">Select an account</option>
               {accounts?.map((account) => (
                 <option key={account.id} value={account.id}>
                   {account.name}
                 </option>
               ))}
             </select>
+            {touched.toAccountId && errors.toAccountId && (
+              <p className="mt-2 text-sm text-red-600">{errors.toAccountId}</p>
+            )}
           </div>
         )}
         {!isTransfer && (
@@ -200,23 +251,28 @@ const AddTransactionForm: React.FC<{
               name="category"
               id="category"
               required
+              onBlur={handleBlur}
               onChange={handleChange}
               value={values.category}
               className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
             >
+              <option value="">Select a category</option>
               {TRANSACTION_CATEGORIES.map((category) => (
                 <option key={category} value={category}>
                   {category}
                 </option>
               ))}
             </select>
+            {touched.category && errors.category && (
+              <p className="mt-2 text-sm text-red-600">{errors.category}</p>
+            )}
           </div>
         )}
       </div>
       <div className="mt-5 sm:mt-6">
         <button
           type="submit"
-          disabled={transition.state === "submitting"}
+          disabled={!isValid || transition.state === "submitting"}
           className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
         >
           {transition.state === "submitting"
