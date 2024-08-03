@@ -30,21 +30,76 @@ export const useFormState = <T extends FormValues>(
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<FormTouched>({});
 
+  // const validateField = useCallback((name: keyof T) => {
+  //   const value = values[name];
+  //   const validation = validationRules[name];
+  //   if (validation) {
+  //     const when = validation.when ? validation.when(values) : true;
+  //     if (validation.required?.value && !value && when) {
+  //       setErrors(prev => ({ ...prev, [name]: validation.required?.message ?? 'This field is required' }));
+  //     } else if (validation.pattern?.value && typeof value === 'string' && !validation.pattern.value.test(value) && when) {
+  //       setErrors(prev => ({ ...prev, [name]: validation?.pattern?.message ?? 'Invalid value' }));
+  //     } else if (validation.custom && when) {
+  //       const customError = validation.custom(value);
+  //       if (customError) {
+  //         setErrors(prev => ({ ...prev, [name]: customError }));
+  //       }
+  //     } else {
+  //       setErrors(prev => {
+  //         const { [name]: _, ...rest } = prev;
+  //         return rest;
+  //       });
+  //     }
+  //   }
+  // }, [values, validationRules]);
+
+  const validateField = useCallback((name: keyof T) => {
+    const value = values[name];
+    const validation = validationRules[name];
+    let error: string | undefined;
+  
+    if (validation) {
+      const when = validation.when ? validation.when(values) : true;
+      if (when) {
+        if (validation.required?.value && !value) {
+          error = validation.required.message;
+        } else if (validation.pattern?.value && typeof value === 'string' && !validation.pattern.value.test(value)) {
+          error = validation.pattern.message;
+        } else if (validation.custom) {
+          error = validation.custom(value);
+        }
+      }
+    }
+  
+    setErrors(prev => {
+      if (error) {
+        return { ...prev, [name]: error };
+      } else {
+        const { [name]: _, ...rest } = prev;
+        return rest;
+      }
+    });
+  }, [values, validationRules]);
+
+
   const handleChange = useCallback((event: ChangeEvent<FormFieldElement>) => {
     const { name, value, type } = event.target;
     setValues((prev) => ({ ...prev, [name]: type === 'checkbox' ? (event.target as HTMLInputElement).checked : value }));
     setTouched((prev) => ({ ...prev, [name]: true }));
+    // validateField(name as keyof T);
   }, []);
 
   const handleBlur = useCallback((event: FocusEvent<FormFieldElement>) => {
     const { name } = event.target;
     setTouched((prev) => ({ ...prev, [name]: true }));
+    // validateField(name as keyof T);
   }, []);
 
   const handleCheckboxChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = event.target;
     setValues((prev) => ({ ...prev, [name]: checked }));
     setTouched((prev) => ({ ...prev, [name]: true }));
+    // validateField(name as keyof T);
   }, []);
 
 
