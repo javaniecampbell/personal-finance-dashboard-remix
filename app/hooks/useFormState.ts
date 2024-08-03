@@ -1,10 +1,11 @@
 import { useState, useCallback, useMemo, ChangeEvent, FocusEvent, FormEvent } from 'react';
 
 // Define custom types
+type FormFieldElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 type FormValues = Record<string, unknown>;
 type FormErrors = Record<string, string>;
 type FormTouched = Record<string, boolean>;
-type ValidationRule = {
+type ValidationRule<T extends FormValues> = {
   required?: {
     value: boolean;
     message: string;
@@ -13,30 +14,39 @@ type ValidationRule = {
     value: RegExp;
     message: string;
   };
-  custom?: (value: string) => string | undefined;
-  when?: (values: FormValues) => boolean;
+  custom?: (value: unknown) => string | undefined;
+  when?: (values: T) => boolean;
 };
 
-type ValidationRules = Record<string, ValidationRule>;
+type ValidationRules<T extends FormValues> = {
+  [K in keyof T]: ValidationRule<T>;
+};
 
 export const useFormState = <T extends FormValues>(
   initialState: T = {} as T,
-  validationRules: ValidationRules = {}
+  validationRules: ValidationRules<T> = {} as ValidationRules<T>
 ) => {
   const [values, setValues] = useState<T>(initialState);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<FormTouched>({});
 
-  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setValues((prev) => ({ ...prev, [name]: value }));
+  const handleChange = useCallback((event: ChangeEvent<FormFieldElement>) => {
+    const { name, value, type } = event.target;
+    setValues((prev) => ({ ...prev, [name]: type === 'checkbox' ? (event.target as HTMLInputElement).checked : value }));
     setTouched((prev) => ({ ...prev, [name]: true }));
   }, []);
 
-  const handleBlur = useCallback((event: FocusEvent<HTMLInputElement>) => {
+  const handleBlur = useCallback((event: FocusEvent<FormFieldElement>) => {
     const { name } = event.target;
     setTouched((prev) => ({ ...prev, [name]: true }));
   }, []);
+
+  const handleCheckboxChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = event.target;
+    setValues((prev) => ({ ...prev, [name]: checked }));
+    setTouched((prev) => ({ ...prev, [name]: true }));
+  }, []);
+
 
   const validate = useCallback(() => {
     const newErrors: FormErrors = {};
@@ -49,11 +59,18 @@ export const useFormState = <T extends FormValues>(
       } else if (validation?.pattern?.value && typeof value === 'string' && !validation.pattern.value.test(value) && when) {
         newErrors[key] = validation?.pattern?.message;
       } else if (validation?.custom && when) {
-        const customErrors = validation.custom(String(value));
+        let customErrors: string | undefined = undefined;
+        if (typeof value === 'string') {
+          customErrors = validation.custom(String(value));
+        } else {
+          customErrors = validation.custom(value);
+        }
         if (customErrors) {
           newErrors[key] = customErrors;
         }
+
       }
+
     });
     setErrors(newErrors);
     return newErrors;
@@ -81,6 +98,7 @@ export const useFormState = <T extends FormValues>(
     touched,
     handleChange,
     handleBlur,
+    handleCheckboxChange,
     handleSubmit,
     isValid,
     resetForm,
