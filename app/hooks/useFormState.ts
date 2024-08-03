@@ -1,32 +1,55 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, ChangeEvent, FocusEvent, FormEvent } from 'react';
 
-export const useFormState = (initialState = {}, validationRules = {}) => {
-  const [values, setValues] = useState(initialState);
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
+// Define custom types
+type FormValues = Record<string, unknown>;
+type FormErrors = Record<string, string>;
+type FormTouched = Record<string, boolean>;
+type ValidationRule = {
+  required?: {
+    value: boolean;
+    message: string;
+  };
+  pattern?: {
+    value: RegExp;
+    message: string;
+  };
+  custom?: (value: string) => string | undefined;
+  when?: (values: FormValues) => boolean;
+};
 
-  const handleChange = useCallback((event) => {
+type ValidationRules = Record<string, ValidationRule>;
+
+export const useFormState = <T extends FormValues>(
+  initialState: T = {} as T,
+  validationRules: ValidationRules = {}
+) => {
+  const [values, setValues] = useState<T>(initialState);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [touched, setTouched] = useState<FormTouched>({});
+
+  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setValues((prev) => ({ ...prev, [name]: value }));
     setTouched((prev) => ({ ...prev, [name]: true }));
   }, []);
 
-  const handleBlur = useCallback((event) => {
+  const handleBlur = useCallback((event: FocusEvent<HTMLInputElement>) => {
     const { name } = event.target;
     setTouched((prev) => ({ ...prev, [name]: true }));
   }, []);
 
   const validate = useCallback(() => {
-    const newErrors = {};
+    const newErrors: FormErrors = {};
     Object.keys(validationRules).forEach((key) => {
       const value = values[key];
       const validation = validationRules[key];
-      if (validation?.required?.value && !value) {
+      const when = validation?.when ? validation.when(values) : true;
+      if (validation?.required?.value && !value && when) {
         newErrors[key] = validation?.required?.message;
-      } else if (validation?.pattern?.value && !validation.pattern.value.test(value)) {
+      } else if (validation?.pattern?.value && typeof value === 'string' && !validation.pattern.value.test(value) && when) {
         newErrors[key] = validation?.pattern?.message;
-      } else if (validation?.custom) {
-        const customErrors = validation.custom(value);
+      } else if (validation?.custom && when) {
+        const customErrors = validation.custom(String(value));
         if (customErrors) {
           newErrors[key] = customErrors;
         }
@@ -36,7 +59,7 @@ export const useFormState = (initialState = {}, validationRules = {}) => {
     return newErrors;
   }, [values, validationRules]);
 
-  const handleSubmit = useCallback((onSubmit) => (event) => {
+  const handleSubmit = useCallback((onSubmit: (values: T) => void) => (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const newErrors = validate();
     if (Object.keys(newErrors).length === 0) {
